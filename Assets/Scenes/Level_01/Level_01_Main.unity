@@ -175,7 +175,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 73c176f402d2c2f4d929aa5da7585d17, type: 2}
+  - {fileID: 0}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -213,7 +213,6 @@ GameObject:
   m_Component:
   - component: {fileID: 1400985785}
   - component: {fileID: 1400985784}
-  - component: {fileID: 1400985783}
   - component: {fileID: 1400985786}
   - component: {fileID: 1400985787}
   - component: {fileID: 1400985788}
@@ -224,14 +223,6 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!81 &1400985783
-AudioListener:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1400985782}
-  m_Enabled: 1
 --- !u!20 &1400985784
 Camera:
   m_ObjectHideFlags: 0
