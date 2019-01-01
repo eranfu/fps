@@ -50,6 +50,10 @@ MonoBehaviour:
     m_Value: 0.223
     min: 0
     max: 1
+  maxFogDistance:
+    m_OverrideState: 0
+    m_Value: 5000
+    min: 0
   mipFogMaxMip:
     m_OverrideState: 1
     m_Value: 1
@@ -155,6 +159,10 @@ MonoBehaviour:
     m_Value: 1
     min: 0
     max: 1
+  maxFogDistance:
+    m_OverrideState: 0
+    m_Value: 5000
+    min: 0
   mipFogMaxMip:
     m_OverrideState: 1
     m_Value: 0.5
@@ -178,6 +186,13 @@ MonoBehaviour:
     m_OverrideState: 1
     m_Value: 5000
     min: 1
+  baseHeight:
+    m_OverrideState: 0
+    m_Value: 0
+  meanHeight:
+    m_OverrideState: 0
+    m_Value: 10
+    min: 1
   anisotropy:
     m_OverrideState: 0
     m_Value: 0
@@ -188,6 +203,9 @@ MonoBehaviour:
     m_Value: 1
     min: 0
     max: 1
+  enableDistantFog:
+    m_OverrideState: 0
+    m_Value: 0
 --- !u!114 &114129811307565452
 MonoBehaviour:
   m_ObjectHideFlags: 3
@@ -295,41 +313,16 @@ MonoBehaviour:
   m_Name: ScreenSpaceReflection
   m_EditorClassIdentifier: 
   active: 0
-  rayLevel:
-    m_OverrideState: 1
-    m_Value: 2
-  rayMinLevel:
-    m_OverrideState: 1
-    m_Value: 2
-  rayMaxLevel:
-    m_OverrideState: 1
-    m_Value: 6
-  rayMaxIterations:
-    m_OverrideState: 1
-    m_Value: 256
   depthBufferThickness:
     m_OverrideState: 1
     m_Value: 0.047
     min: 0
     max: 1
-  screenWeightDistance:
-    m_OverrideState: 1
+  screenFadeDistance:
+    m_OverrideState: 0
     m_Value: 0.1
     min: 0
     max: 1
-  rayMaxScreenDistance:
-    m_OverrideState: 1
-    m_Value: 0.3
-    min: 0
-    max: 1
-  rayBlendScreenDistance:
-    m_OverrideState: 1
-    m_Value: 0.1
-    min: 0
-    max: 1
-  rayMarchBehindObjects:
-    m_OverrideState: 1
-    m_Value: 1
   minSmoothness:
     m_OverrideState: 1
     m_Value: 0.471
@@ -340,6 +333,12 @@ MonoBehaviour:
     m_Value: 1
     min: 0
     max: 1
+  reflectSky:
+    m_OverrideState: 0
+    m_Value: 1
+  rayMaxIterations:
+    m_OverrideState: 1
+    m_Value: 256
 --- !u!114 &114275059934149700
 MonoBehaviour:
   m_ObjectHideFlags: 3
@@ -353,41 +352,11 @@ MonoBehaviour:
   m_Name: ScreenSpaceRefraction
   m_EditorClassIdentifier: 
   active: 1
-  rayLevel:
-    m_OverrideState: 0
-    m_Value: 2
-  rayMinLevel:
-    m_OverrideState: 0
-    m_Value: 2
-  rayMaxLevel:
-    m_OverrideState: 0
-    m_Value: 6
-  rayMaxIterations:
-    m_OverrideState: 0
-    m_Value: 32
-  depthBufferThickness:
-    m_OverrideState: 0
-    m_Value: 0.01
-    min: 0
-    max: 1
-  screenWeightDistance:
+  screenFadeDistance:
     m_OverrideState: 0
     m_Value: 0.1
-    min: 0
+    min: 0.001
     max: 1
-  rayMaxScreenDistance:
-    m_OverrideState: 0
-    m_Value: 0.3
-    min: 0
-    max: 1
-  rayBlendScreenDistance:
-    m_OverrideState: 0
-    m_Value: 0.1
-    min: 0
-    max: 1
-  rayMarchBehindObjects:
-    m_OverrideState: 0
-    m_Value: 1
 --- !u!114 &114680931561226212
 MonoBehaviour:
   m_ObjectHideFlags: 3
@@ -466,12 +435,11 @@ MonoBehaviour:
   m_Name: VolumetricLightingController
   m_EditorClassIdentifier: 
   active: 1
-  depthRange:
-    m_OverrideState: 1
-    m_Value: {x: 1, y: 3000}
-    min: 0.01
-    max: 10000
-  depthDistributionUniformity:
+  depthExtent:
+    m_OverrideState: 0
+    m_Value: 64
+    min: 0.1
+  sliceDistributionUniformity:
     m_OverrideState: 1
     m_Value: 0.75
     min: 0
