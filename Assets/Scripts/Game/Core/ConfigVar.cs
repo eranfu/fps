@@ -22,9 +22,9 @@ namespace Game.Core
         private static bool _initialized = false;
         private static readonly Regex ValidateNameRe = new Regex(@"^[a-z_+-][a-z0-9_+.-]*$");
 
-        private string _name;
+        private readonly string _name;
         private string _description;
-        private Flags _flags;
+        private readonly Flags _flags;
         public bool changed;
 
         private string _stringValue;
@@ -47,6 +47,8 @@ namespace Game.Core
                 changed = true;
             }
         }
+
+        public int IntValue => _intValue;
 
         private ConfigVar(string name, string description, Flags flags)
         {
@@ -89,7 +91,8 @@ namespace Game.Core
                         }
 
                         var attr = fieldInfo.GetCustomAttribute<ConfigVarAttribute>(false);
-                        string name = attr.Name ?? $"{type.FullName}.{fieldInfo.Name}";
+                        Debug.Assert(type.FullName != null, "type.FullName != null");
+                        string name = attr.Name ?? $"{type.FullName.ToLower()}.{fieldInfo.Name.ToLower()}";
                         var var = (ConfigVar) fieldInfo.GetValue(null);
                         if (var != null)
                         {

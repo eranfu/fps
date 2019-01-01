@@ -19,14 +19,16 @@ namespace Game.Main
     {
         public delegate void UpdateDelegate();
 
+        public static double frameTime;
+
         public WeakAssetReference movableBoxPrototype;
+
+        [EnumeratedArray(typeof(GameColor))] public Color[] gameColor;
 
         public enum GameColor
         {
             Friend,
             Enemy
         }
-
-        [EnumeratedArray(typeof(GameColor))] public Color[] gameColor;
     }
 }
