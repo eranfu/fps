@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Reflection;
+using System.Text.RegularExpressions;
 using UnityEngine;
 
 namespace Game.Core
@@ -18,6 +20,40 @@ namespace Game.Core
         public static readonly Dictionary<string, ConfigVar> ConfigVars = new Dictionary<string, ConfigVar>();
         public static Flags dirtyFlags = Flags.None;
         private static bool _initialized = false;
+        private static readonly Regex ValidateNameRe = new Regex(@"^[a-z_+-][a-z0-9_+.-]*$");
+
+        private string _name;
+        private string _description;
+        private Flags _flags;
+        public bool changed;
+
+        private string _stringValue;
+        private float _floatValue;
+        private int _intValue;
+
+        public string Value
+        {
+            get => _stringValue;
+            set
+            {
+                if (_stringValue == value)
+                    return;
+                dirtyFlags |= _flags;
+                _stringValue = value;
+                if (!int.TryParse(_stringValue, out _intValue))
+                    _intValue = 0;
+                if (!float.TryParse(_stringValue, NumberStyles.Float, CultureInfo.InvariantCulture, out _floatValue))
+                    _floatValue = 0;
+                changed = true;
+            }
+        }
+
+        private ConfigVar(string name, string description, Flags flags)
+        {
+            _name = name;
+            _description = description;
+            _flags = flags;
+        }
 
         public static void Init()
         {
@@ -53,12 +89,46 @@ namespace Game.Core
                         }
 
                         var attr = fieldInfo.GetCustomAttribute<ConfigVarAttribute>(false);
+                        string name = attr.Name ?? $"{type.FullName}.{fieldInfo.Name}";
+                        var var = (ConfigVar) fieldInfo.GetValue(null);
+                        if (var != null)
+                        {
+                            Debug.LogError(
+                                $"ConfigVar ({name}) should not be initialized from code; just marked with attribute");
+                            continue;
+                        }
 
+                        var = new ConfigVar(name, attr.Description, attr.Flags)
+                        {
+                            Value = attr.DefaultValue
+                        };
+                        RegisterConfigVar(var);
+                        fieldInfo.SetValue(null, var);
                     }
                 }
             }
+
+            dirtyFlags = Flags.None;
         }
 
+        private static void RegisterConfigVar(ConfigVar var)
+        {
+            if (ConfigVars.ContainsKey(var._name))
+            {
+                Debug.LogError($"Trying to register ConfigVar {var._name} twice");
+                return;
+            }
+
+            if (!ValidateNameRe.IsMatch(var._name))
+            {
+                Debug.LogError($"Trying to register ConfigVar with invalidate name: {var._name}");
+                return;
+            }
+
+            ConfigVars.Add(var._name, var);
+        }
+
+        [Flags]
         public enum Flags
         {
             None = 0x0, // None
