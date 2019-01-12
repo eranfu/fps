@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using Game.Core;
 using UnityEngine;
+using Utils.DebugOverlay;
 using Utils.Pool;
 
 namespace Console
@@ -147,6 +148,15 @@ namespace Console
         public static void SetOpen(bool open)
         {
             _consoleUi.SetOpen(open);
+        }
+
+        public static void ConsoleUpdate()
+        {
+            double lastMessageTime = Game.Main.Game.frameTime - _timeLastMessage;
+            if (lastMessageTime < 1)
+            {
+                DebugOverlay.Write(0, 0, _lastMessage);
+            }
         }
 
         private static void CmdExec(string[] args)
