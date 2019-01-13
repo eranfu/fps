@@ -14,7 +14,7 @@ namespace Utils.DebugOverlay
                 return;
             }
 
-            int l = TextFormatter.Write(ref _buf, 0, format);
+            int l = StringFormatter.Write(ref _buf, 0, format);
             _instance.DrawText(x, y, ref _buf, l);
         }
 
