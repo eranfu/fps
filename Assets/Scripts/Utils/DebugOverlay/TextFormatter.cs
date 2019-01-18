@@ -199,17 +199,19 @@ namespace Utils.DebugOverlay
 
             unsafe void IConverter<int>.Convert(ref char* destBuf, char* end, int value, FormatSpec formatSpec)
             {
-                ConvertInt(ref destBuf, end, value, formatSpec);
+                ConvertInt(ref destBuf, end, value, formatSpec.argWidth, formatSpec.numberWidth,
+                    formatSpec.leadingZero);
             }
 
             unsafe void IConverter<float>.Convert(ref char* destBuf, char* end, float value, FormatSpec formatSpec)
             {
-                throw new NotImplementedException();
+                ConvertInt(ref destBuf, end, (int) value, formatSpec.argWidth, formatSpec.numberWidth,
+                    formatSpec.leadingZero);
             }
 
             unsafe void IConverter<string>.Convert(ref char* destBuf, char* end, string value, FormatSpec formatSpec)
             {
-                throw new NotImplementedException();
+
             }
 
             unsafe void IConverter<byte>.Convert(ref char* destBuf, char* end, byte value, FormatSpec formatSpec)
@@ -223,9 +225,76 @@ namespace Utils.DebugOverlay
                 throw new NotImplementedException();
             }
 
-            private unsafe void ConvertInt(ref char* destBuf, char* end, int value, FormatSpec formatSpec)
+            private unsafe void ConvertInt(ref char* destBuf, char* end, int value, int argWidth, int integerWidth,
+                bool leadingZero)
             {
+                // Dry run to calculate size
+                var numberWidth = 0;
+                var signWidth = 0;
+                var intPaddingWidth = 0;
+                var argPaddingWidth = 0;
 
+                bool neg = value < 0;
+                if (neg)
+                {
+                    value = -value;
+                    signWidth = 1;
+                }
+
+                int v = value;
+                do
+                {
+                    ++numberWidth;
+                    v /= 10;
+                } while (v != 0);
+
+                if (numberWidth < integerWidth)
+                {
+                    intPaddingWidth = integerWidth - numberWidth;
+                }
+
+                if (numberWidth + intPaddingWidth + signWidth < argWidth)
+                {
+                    argPaddingWidth = argWidth - numberWidth - intPaddingWidth - signWidth;
+                }
+
+                destBuf += argPaddingWidth + signWidth + intPaddingWidth + numberWidth;
+
+                if (destBuf > end)
+                {
+                    return;
+                }
+
+                do
+                {
+                    *(--destBuf) = (char) ('0' + (value % 10));
+                    value /= 10;
+                } while (value != 0);
+
+                if (leadingZero)
+                {
+                    while (intPaddingWidth-- > 0)
+                    {
+                        *(--destBuf) = '0';
+                    }
+                }
+                else
+                {
+                    while (intPaddingWidth-- > 0)
+                    {
+                        *(--destBuf) = ' ';
+                    }
+                }
+
+                if (neg)
+                {
+                    *(--destBuf) = '-';
+                }
+
+                while (argPaddingWidth-- > 0)
+                {
+                    *(--destBuf) = ' ';
+                }
             }
         }
     }
