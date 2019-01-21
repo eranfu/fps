@@ -1,4 +1,5 @@
 ﻿using System;
+using UnityEngine;
 
 namespace Utils.DebugOverlay
 {
@@ -18,7 +19,7 @@ namespace Utils.DebugOverlay
         public CharBufView(char[] buf, int length) : this()
         {
             this.buf = buf;
-            this.start = 0;
+            start = 0;
             this.length = length;
         }
     }
@@ -27,12 +28,13 @@ namespace Utils.DebugOverlay
     {
         public static int Write(ref char[] destBuf, int destIndex, string format)
         {
-            return Write<NoArg, NoArg, NoArg, NoArg, NoArg, NoArg>(ref destBuf, destIndex, format, null, null, null,
-                null,
-                null, null);
+            return Write<NoArg, NoArg, NoArg, NoArg, NoArg, NoArg>(
+                ref destBuf, destIndex, format,
+                null, null, null, null, null, null);
         }
 
-        private static int Write<T0, T1, T2, T3, T4, T5>(ref char[] destBuf, int destIndex, string format,
+        private static int Write<T0, T1, T2, T3, T4, T5>(
+            ref char[] destBuf, int destIndex, string format,
             T0 arg0, T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5)
         {
             int written;
@@ -205,24 +207,67 @@ namespace Utils.DebugOverlay
 
             unsafe void IConverter<float>.Convert(ref char* destBuf, char* end, float value, FormatSpec formatSpec)
             {
-                ConvertInt(ref destBuf, end, (int) value, formatSpec.argWidth, formatSpec.numberWidth,
+                if (formatSpec.fractWidth == 0)
+                    formatSpec.fractWidth = 2;
+
+                int intWidth = formatSpec.argWidth - formatSpec.fractWidth - 1;
+
+                var neg = false;
+                if (value < 0)
+                {
+                    neg = true;
+                    value = -value;
+                }
+
+                int intPart = Mathf.FloorToInt(value);
+                var fractMulti = (int) Mathf.Pow(10, formatSpec.fractWidth);
+                int fractPart = Mathf.FloorToInt(value * fractMulti) % fractMulti;
+                ConvertInt(ref destBuf, end, neg ? -intPart : intPart, intWidth, formatSpec.numberWidth,
                     formatSpec.leadingZero);
+                if (destBuf < end)
+                    *destBuf++ = '.';
+                ConvertInt(ref destBuf, end, fractPart, formatSpec.fractWidth, formatSpec.fractWidth, true);
             }
 
             unsafe void IConverter<string>.Convert(ref char* destBuf, char* end, string value, FormatSpec formatSpec)
             {
+                var lPadding = 0;
+                var rPadding = 0;
+                if (formatSpec.argWidth < 0)
+                    rPadding = -formatSpec.argWidth - value.Length;
+                else
+                    lPadding = formatSpec.argWidth - value.Length;
 
+                while (lPadding-- > 0 && destBuf < end)
+                    *destBuf++ = ' ';
+                for (int i = 0, l = value.Length; i < l && destBuf < end; i++)
+                    *destBuf++ = value[i];
+                while (rPadding-- > 0 && destBuf < end)
+                    *destBuf++ = ' ';
             }
 
             unsafe void IConverter<byte>.Convert(ref char* destBuf, char* end, byte value, FormatSpec formatSpec)
             {
-                throw new NotImplementedException();
+                ConvertInt(ref destBuf, end, value, formatSpec.argWidth, formatSpec.numberWidth,
+                    formatSpec.leadingZero);
             }
 
             unsafe void IConverter<CharBufView>.Convert(ref char* destBuf, char* end, CharBufView value,
                 FormatSpec formatSpec)
             {
-                throw new NotImplementedException();
+                var lPadding = 0;
+                var rPadding = 0;
+                if (formatSpec.argWidth < 0)
+                    rPadding = -formatSpec.argWidth - value.length;
+                else
+                    lPadding = formatSpec.argWidth - value.length;
+
+                while (lPadding-- > 0 && destBuf < end)
+                    *destBuf++ = ' ';
+                for (int i = 0, l = value.length; i < l && destBuf < end; ++i)
+                    *destBuf++ = value.buf[i + value.start];
+                while (rPadding-- > 0 && destBuf < end)
+                    *destBuf++ = ' ';
             }
 
             private unsafe void ConvertInt(ref char* destBuf, char* end, int value, int argWidth, int integerWidth,
@@ -267,7 +312,7 @@ namespace Utils.DebugOverlay
 
                 do
                 {
-                    *(--destBuf) = (char) ('0' + (value % 10));
+                    *--destBuf = (char) ('0' + (value % 10));
                     value /= 10;
                 } while (value != 0);
 
@@ -275,25 +320,25 @@ namespace Utils.DebugOverlay
                 {
                     while (intPaddingWidth-- > 0)
                     {
-                        *(--destBuf) = '0';
+                        *--destBuf = '0';
                     }
                 }
                 else
                 {
                     while (intPaddingWidth-- > 0)
                     {
-                        *(--destBuf) = ' ';
+                        *--destBuf = ' ';
                     }
                 }
 
                 if (neg)
                 {
-                    *(--destBuf) = '-';
+                    *--destBuf = '-';
                 }
 
                 while (argPaddingWidth-- > 0)
                 {
-                    *(--destBuf) = ' ';
+                    *--destBuf = ' ';
                 }
             }
         }
