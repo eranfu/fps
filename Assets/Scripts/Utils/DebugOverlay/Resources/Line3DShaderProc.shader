@@ -36,7 +36,7 @@
                 float4 color; 
             };
 
-            StructuredBuffer<instancedata> positionBuffer;
+            StructuredBuffer<instancedata> instanceBuffer;
             
             struct v2f
             {
@@ -56,9 +56,9 @@
                 v_pos.x -= 0.5;
 
                 // Read instance data
-                float4 start = positionBuffer[instID].start;
-                float4 end = positionBuffer[instID].end;
-                float4 color = positionBuffer[instID].color;
+                float4 start = instanceBuffer[instID].start;
+                float4 end = instanceBuffer[instID].end;
+                float4 color = instanceBuffer[instID].color;
 
                 float4 dir = end - start;
                 float3 startDir = start - _WorldSpaceCameraPos;
