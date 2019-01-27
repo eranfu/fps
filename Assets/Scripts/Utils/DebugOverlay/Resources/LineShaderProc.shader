@@ -15,7 +15,7 @@
             }
 
             ZWrite Off
-            ZTest Less
+            ZTest Always
             Cull Off
             Blend SrcAlpha OneMinusSrcAlpha
 

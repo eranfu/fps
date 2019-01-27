@@ -1,56 +1,87 @@
-﻿Shader "Unlit/GlyphShaderProc"
+﻿Shader "Debug/GlyphShaderProc"
 {
     Properties
     {
-        _MainTex ("Texture", 2D) = "white" {}
+        _MainTex("Texture", 2D) = "white" {}
     }
+
     SubShader
     {
-        Tags { "RenderType"="Opaque" }
-        LOD 100
-
         Pass
         {
+            Tags
+            {
+                "Queue" = "Transparent"
+                "RenderType" = "Transparent"
+            }
+
+            ZWrite Off
+            ZTest Always
+            Cull Off
+            Blend SrcAlpha OneMinusSrcAlpha
+
             CGPROGRAM
             #pragma vertex vert
             #pragma fragment frag
-            // make fog work
-            #pragma multi_compile_fog
-            
+            #pragma multi_compile_fwdbase nolightmap nodirlightmap nodynlightmap novertexlight
+            #pragma target 4.5
+
             #include "UnityCG.cginc"
 
-            struct appdata
+            struct instancedata
             {
-                float4 vertex : POSITION;
-                float2 uv : TEXCOORD0;
+                float4 pos;
+                float4 size;
+                float4 color;
             };
 
             struct v2f
             {
                 float2 uv : TEXCOORD0;
-                UNITY_FOG_COORDS(1)
-                float4 vertex : SV_POSITION;
+                float4 color : TEXCOORD3;
+                float4 pos : SV_POSITION;
             };
 
             sampler2D _MainTex;
-            float4 _MainTex_ST;
-            
-            v2f vert (appdata v)
+            float4 scales;
+            StructuredBuffer<instancedata> instanceBuffer;
+
+            v2f vert(uint vid : SV_VertexID, uint instanceID : SV_InstanceID)
             {
+                int instID = vid / 6;
+                int vertID = vid - instID * 6;
+
+                // Generate (0, 0) (1, 0) (1, 1) (1, 1) (0, 1) (0, 0) from vertID
+                float2 v_pos = saturate(float2(2 - abs(vertID - 2), 2 - abs(vertID - 3)));
+
+                // Read data
+                float4 pos_uv = instanceBuffer[instID].pos;
+                float2 scale = instanceBuffer[instID].size.xy;
+                float4 color = instanceBuffer[instID].color;
+
+                // Generate uv
+                float2 uv = (pos_uv.zw + v_pos) * scales.zw;
+                uv.y = 1 - uv.y;
+
+                // Generate pos
+                float2 pos = (pos_uv.xy + v_pos * scale) * scales.xy;
+                pos = float2(-1, -1) + pos * 2;
+
+                // Need to flip y for HD pipe for some reason
+                pos.y *= -1;
+
                 v2f o;
-                o.vertex = UnityObjectToClipPos(v.vertex);
-                o.uv = TRANSFORM_TEX(v.uv, _MainTex);
-                UNITY_TRANSFER_FOG(o,o.vertex);
+                o.uv = uv;
+                o.color = color;
+                o.pos = float4(pos, 1, 1);
                 return o;
             }
-            
-            fixed4 frag (v2f i) : SV_Target
+
+            fixed4 frag(v2f i) : SV_Target
             {
-                // sample the texture
-                fixed4 col = tex2D(_MainTex, i.uv);
-                // apply fog
-                UNITY_APPLY_FOG(i.fogCoord, col);
-                return col;
+                float4 albedo = tex2D(_MainTex, i.uv);
+                albedo = lerp(albedo, float4(1, 1, 1, 1), i.color.a);
+                return albedo * float4(i.color.rgb, 1);
             }
             ENDCG
         }
