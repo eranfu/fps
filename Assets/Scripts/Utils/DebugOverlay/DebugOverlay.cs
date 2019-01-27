@@ -1,4 +1,7 @@
-﻿using UnityEngine;
+﻿#if UNITY_EDITOR
+using UnityEditor;
+#endif
+using UnityEngine;
 
 namespace Utils.DebugOverlay
 {
@@ -37,10 +40,28 @@ namespace Utils.DebugOverlay
         private int _numQuadUsed = 0;
         private int _numLineUsed = 0;
         private Material _lineMaterial;
+        private Line3DBuffer _line3DBuffer;
 
         private void Awake()
         {
             _lineMaterial = new Material(lineShaderProc);
+            _line3DBuffer = new Line3DBuffer();
+#if UNITY_EDITOR
+            Camera[] allSceneCameras = SceneView.GetAllSceneCameras();
+            foreach (var sceneCamera in allSceneCameras)
+            {
+                sceneCamera.gameObject.AddComponent<DebugOverlayCamera>();
+            }
+#endif
+        }
+
+        public void Init()
+        {
+            _instance = this;
+        }
+
+        public void ShutDown()
+        {
 
         }
 
@@ -145,6 +166,11 @@ namespace Utils.DebugOverlay
         {
             public Vector4 position; // segment from (x, y) to (z, w)
             public Vector4 color;
+        }
+
+        public static Line3DBuffer GetLine3DBuffer()
+        {
+            return _instance == null ? null : _instance._line3DBuffer;
         }
     }
 }
