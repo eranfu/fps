@@ -17,35 +17,20 @@ namespace Utils.DebugOverlay
 
         [SerializeField] private int height = 25;
 
-        [SerializeField] [Tooltip("Number of columns of glyphs on texture")]
-        private int charCols = 30;
+        [SerializeField] private QuadBuffer quadBuffer = null;
 
-        [SerializeField] [Tooltip("Number of rows of glyphs on texture")]
-        private int charRows = 16;
-
-        [SerializeField] [Tooltip("Width in pixels of each glyph")]
-        private int cellWidth = 32;
-
-        [SerializeField] [Tooltip("Height in pixels of each glyph")]
-        private int cellHeight = 32;
-
-        [SerializeField] private Shader lineShaderProc;
+        private Line3DBuffer _line3DBuffer;
+        private LineBuffer _lineBuffer;
 
         private float _yOrigin;
         private float _xOrigin;
         private Color _currentColor = Color.white;
 
-        private QuadInstanceData[] _quadArray = new QuadInstanceData[128];
-        private LineInstanceData[] _lineArray = new LineInstanceData[128];
-        private int _numQuadUsed = 0;
-        private int _numLineUsed = 0;
-        private Material _lineMaterial;
-        private Line3DBuffer _line3DBuffer;
-
         private void Awake()
         {
-            _lineMaterial = new Material(lineShaderProc);
+            _lineBuffer = new LineBuffer();
             _line3DBuffer = new Line3DBuffer();
+
 #if UNITY_EDITOR
             Camera[] allSceneCameras = SceneView.GetAllSceneCameras();
             foreach (var sceneCamera in allSceneCameras)
@@ -60,9 +45,24 @@ namespace Utils.DebugOverlay
             _instance = this;
         }
 
-        public void ShutDown()
+        public void Shutdown()
         {
+            quadBuffer.Shutdown();
+            quadBuffer = null;
+            _line3DBuffer.Shutdown();
+            _line3DBuffer = null;
+            _lineBuffer.Shutdown();
+            _lineBuffer = null;
 
+            _instance = null;
+        }
+
+        public void TickLateUpdate()
+        {
+            quadBuffer.PrepareBuffer();
+            _lineBuffer.PrepareBuffer();
+            _line3DBuffer.PrepareBuffer();
+            SetOrigin(0, 0);
         }
 
         public static void SetOrigin(float x, float y)
@@ -108,64 +108,15 @@ namespace Utils.DebugOverlay
                     int g = hexes.IndexOf(text[i + 2]);
                     int b = hexes.IndexOf(text[i + 3]);
                     color.x = (r * 16 + r) / 255f;
-                    color.y = (r * 16 + r) / 255f;
-                    color.z = (r * 16 + r) / 255f;
+                    color.y = (g * 16 + g) / 255f;
+                    color.z = (b * 16 + b) / 255f;
                     i += 3;
                     continue;
                 }
 
-                AddQuad(_xOrigin + x + xPos, _yOrigin + y, 1, 1, text[i], color);
+                quadBuffer.AddQuad(_xOrigin + x + xPos, _yOrigin + y, 1, 1, text[i], color);
                 ++xPos;
             }
-        }
-
-        private unsafe void AddQuad(float x, float y, float w, float h, char c, Vector4 color)
-        {
-            if (_numQuadUsed >= _quadArray.Length)
-            {
-                // resize
-                var newBuf = new QuadInstanceData[_quadArray.Length + 128];
-                System.Array.Copy(_quadArray, newBuf, _quadArray.Length);
-                _quadArray = newBuf;
-            }
-
-            fixed (QuadInstanceData* data = &_quadArray[_numQuadUsed])
-            {
-                if (c != '\0')
-                {
-                    data->positionAndUv.z = (c - 32) % charCols;
-                    data->positionAndUv.w = (c - 32) / charCols;
-                    color.w = 0;
-                }
-                else
-                {
-                    data->positionAndUv.z = 0;
-                    data->positionAndUv.w = 0;
-                }
-
-                data->color = color;
-                data->positionAndUv.x = x;
-                data->positionAndUv.y = y;
-                data->size.x = w;
-                data->size.y = h;
-                data->size.z = 0;
-                data->size.w = 0;
-            }
-
-            ++_numQuadUsed;
-        }
-
-        private struct QuadInstanceData
-        {
-            public Vector4 positionAndUv; // if uv are zero, don't sample
-            public Vector4 size; // zw unused
-            public Vector4 color;
-        }
-
-        private struct LineInstanceData
-        {
-            public Vector4 position; // segment from (x, y) to (z, w)
-            public Vector4 color;
         }
 
         public static Line3DBuffer GetLine3DBuffer()
