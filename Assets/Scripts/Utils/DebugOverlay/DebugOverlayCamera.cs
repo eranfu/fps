@@ -6,8 +6,7 @@ namespace Utils.DebugOverlay
     {
         private void OnPostRender()
         {
-            var line3DBuffer = DebugOverlay.GetLine3DBuffer();
-            line3DBuffer?.Draw();
+            DebugOverlay.Draw();
         }
     }
 }

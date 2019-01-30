@@ -2,10 +2,11 @@
 using UnityEditor;
 #endif
 using UnityEngine;
+using UnityEngine.Rendering;
 
 namespace Utils.DebugOverlay
 {
-    public class DebugOverlay : MonoBehaviour
+    public class DebugOverlay : ScriptableObject
     {
         private static DebugOverlay _instance;
         private static char[] _buf = new char[1024];
@@ -17,10 +18,9 @@ namespace Utils.DebugOverlay
 
         [SerializeField] private int height = 25;
 
-        [SerializeField] private QuadBuffer quadBuffer = null;
-
-        private Line3DBuffer _line3DBuffer;
-        private LineBuffer _lineBuffer;
+        [SerializeField] private QuadBuffer quadBuffer;
+        [SerializeField] private Line3DBuffer line3DBuffer;
+        [SerializeField] private LineBuffer lineBuffer;
 
         private float _yOrigin;
         private float _xOrigin;
@@ -28,9 +28,6 @@ namespace Utils.DebugOverlay
 
         private void Awake()
         {
-            _lineBuffer = new LineBuffer();
-            _line3DBuffer = new Line3DBuffer();
-
 #if UNITY_EDITOR
             Camera[] allSceneCameras = SceneView.GetAllSceneCameras();
             foreach (var sceneCamera in allSceneCameras)
@@ -49,10 +46,10 @@ namespace Utils.DebugOverlay
         {
             quadBuffer.Shutdown();
             quadBuffer = null;
-            _line3DBuffer.Shutdown();
-            _line3DBuffer = null;
-            _lineBuffer.Shutdown();
-            _lineBuffer = null;
+            line3DBuffer.Shutdown();
+            line3DBuffer = null;
+            lineBuffer.Shutdown();
+            lineBuffer = null;
 
             _instance = null;
         }
@@ -60,8 +57,8 @@ namespace Utils.DebugOverlay
         public void TickLateUpdate()
         {
             quadBuffer.PrepareBuffer();
-            _lineBuffer.PrepareBuffer();
-            _line3DBuffer.PrepareBuffer();
+            lineBuffer.PrepareBuffer();
+            line3DBuffer.PrepareBuffer();
             SetOrigin(0, 0);
         }
 
@@ -119,9 +116,37 @@ namespace Utils.DebugOverlay
             }
         }
 
-        public static Line3DBuffer GetLine3DBuffer()
+        public static void Draw()
         {
-            return _instance == null ? null : _instance._line3DBuffer;
+            if (_instance == null)
+            {
+                return;
+            }
+
+            _instance.line3DBuffer.Draw();
+            _instance.lineBuffer.Draw();
+            _instance.quadBuffer.Draw();
+        }
+
+        public static void HDDraw(CommandBuffer cmd)
+        {
+            if (_instance == null)
+            {
+                return;
+            }
+
+            _instance.lineBuffer.HDDraw(cmd);
+            _instance.quadBuffer.HDDraw(cmd);
+        }
+
+        public static void HDDraw3D(CommandBuffer cmd)
+        {
+            if (_instance == null)
+            {
+                return;
+            }
+
+            _instance.line3DBuffer.HDDraw(cmd);
         }
     }
 }
