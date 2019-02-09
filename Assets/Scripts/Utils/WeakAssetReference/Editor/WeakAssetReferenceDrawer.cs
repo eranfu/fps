@@ -1,7 +1,6 @@
 ﻿using System;
 using UnityEditor;
 using UnityEngine;
-using Object = UnityEngine.Object;
 
 namespace Utils.WeakAssetReference.Editor
 {
@@ -10,29 +9,30 @@ namespace Utils.WeakAssetReference.Editor
     {
         public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
         {
+            EditorGUI.BeginProperty(position, label, property);
             var assetTypeAttribute =
                 Attribute.GetCustomAttribute(fieldInfo, typeof(AssetTypeAttribute)) as AssetTypeAttribute;
             Type assetType = assetTypeAttribute?.type ?? typeof(GameObject);
+            WeakAssetReferenceDrawerHelper.GuidField(assetType, position, property, label);
+            EditorGUI.EndProperty();
+        }
+    }
 
-            SerializedProperty guid = property.FindPropertyRelative("guid");
-            string assetPath = AssetDatabase.GUIDToAssetPath(guid.stringValue);
-            Object obj = AssetDatabase.LoadAssetAtPath(assetPath, assetType);
-
-            position = EditorGUI.PrefixLabel(position, GUIUtility.GetControlID(FocusType.Passive),
-                new GUIContent(label.text + "(" + guid.stringValue + ")"));
-            Object newObj = EditorGUI.ObjectField(position, obj, assetType, false);
-            if (newObj != obj)
+    [CustomPropertyDrawer(typeof(WeakBase), true)]
+    public class WeakBaseDrawer : PropertyDrawer
+    {
+        public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
+        {
+            EditorGUI.BeginProperty(position, label, property);
+            Type assetType = typeof(GameObject);
+            Type baseType = fieldInfo.FieldType.BaseType;
+            if (baseType != null && baseType.IsGenericType && baseType.GetGenericTypeDefinition() == typeof(Weak<>))
             {
-                if (newObj != null)
-                {
-                    assetPath = AssetDatabase.GetAssetPath(newObj);
-                    property.stringValue = AssetDatabase.AssetPathToGUID(assetPath);
-                }
-                else
-                {
-                    property.stringValue = "";
-                }
+                assetType = baseType.GetGenericArguments()[0];
             }
+
+            WeakAssetReferenceDrawerHelper.GuidField(assetType, position, property, label);
+            EditorGUI.EndProperty();
         }
     }
 }

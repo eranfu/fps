@@ -67,16 +67,16 @@ namespace Game.Core
 
         private static void InjectAttributeConfigVars()
         {
-            foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
+            foreach (Assembly assembly in AppDomain.CurrentDomain.GetAssemblies())
             {
-                foreach (var type in assembly.GetTypes())
+                foreach (Type type in assembly.GetTypes())
                 {
                     if (!type.IsClass)
                         continue;
-                    foreach (var fieldInfo in type.GetFields(BindingFlags.Instance | BindingFlags.Static |
+                    foreach (FieldInfo fieldInfo in type.GetFields(BindingFlags.Instance | BindingFlags.Static |
                                                              BindingFlags.Public | BindingFlags.NonPublic))
                     {
-                        if (!fieldInfo.IsDefined(typeof(ConfigVar), false))
+                        if (!fieldInfo.IsDefined(typeof(ConfigVarAttribute), false))
                             continue;
                         if (!fieldInfo.IsStatic)
                         {
@@ -135,7 +135,7 @@ namespace Game.Core
         public enum Flags
         {
             None = 0x0, // None
-            Save = 0x1, // Causes the cvar to be save to settings.cfg
+            Save = 0x1, // Causes the var to be save to settings.cfg
             Cheat = 0x2, // Consider this a cheat var. Can only be set if cheats enabled
             ServerInfo = 0x4, // These vars are sent to clients when connecting and when changed
             ClientInfo = 0x8, // These vars are sent to server when connecting and when changed

@@ -56,7 +56,7 @@ namespace Console
             _consoleUi?.OutputString(message);
         }
 
-        private static void Write(string message)
+        public static void Write(string message)
         {
             if (_consoleShowLastLine?.IntValue > 0)
             {

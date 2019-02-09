@@ -1,6 +1,9 @@
-﻿using System.Diagnostics;
+﻿using System.Collections.Generic;
+using System.Diagnostics;
+using Unity.Mathematics;
 using UnityEngine;
 using UnityEngine.Profiling;
+using Utils.Pool;
 
 namespace Game.Core
 {
@@ -16,19 +19,19 @@ namespace Game.Core
         private const int NoFrames = 128;
 
         public int rtt;
+        private int _lastWorldTick;
         private Color _fpsColor = new Color(0.5f, 0.0f, 0.2f);
         private Color[] _histColor = {Color.green, Color.grey};
         private readonly Stopwatch _stopWatch;
         private long _lastFrameTicks;
         private float _frameDurationMs;
-        private float[] _frameTimes;
+        private float[] _frameDurationArray;
         private float[][] _ticksPerFrame;
-        private long _frequencyMs;
+        private readonly long _frequencyMs;
         private string _graphicsDeviceName;
 
         private RecorderEntry[] _recorderList =
         {
-
         };
 
         public GameStatistics()
@@ -37,20 +40,53 @@ namespace Game.Core
             _stopWatch = new Stopwatch();
             _stopWatch.Start();
             _lastFrameTicks = _stopWatch.ElapsedTicks;
-            _frameTimes = new float[NoFrames];
+            _frameDurationArray = new float[NoFrames];
             _ticksPerFrame = new[] {new float[NoFrames], new float[NoFrames]};
+
             _graphicsDeviceName = SystemInfo.graphicsDeviceName;
 
-            foreach (var recorderEntry in _recorderList)
+            foreach (RecorderEntry recorderEntry in _recorderList)
             {
-                var sampler = Sampler.Get(recorderEntry.name);
+                Sampler sampler = Sampler.Get(recorderEntry.name);
                 if (sampler != null)
                 {
                     recorderEntry.recorder = sampler.GetRecorder();
                 }
             }
 
+            Console.Console.AddCommand("show.profilers", CmdShowProfilers, "Show available profilers.");
+        }
 
+        private void CmdShowProfilers(string[] args)
+        {
+            var names = SimpleObjectPool.Pop<List<string>>();
+            Sampler.GetNames(names);
+
+            string search = args.Length > 0 ? args[0].ToLower() : null;
+            foreach (string name in names)
+            {
+                if (search == null || name.ToLower().Contains(search))
+                {
+                    Console.Console.Write(name);
+                }
+            }
+
+            names.Clear();
+            SimpleObjectPool.Push(names);
+        }
+
+        private void SnapTime()
+        {
+            long now = _stopWatch.ElapsedTicks;
+            long duration = now - _lastFrameTicks;
+            _lastFrameTicks = now;
+            float d = (float) duration / _frequencyMs;
+            _frameDurationMs = math.lerp(_frameDurationMs, d, 0.1f);
+            _frameDurationArray[Time.frameCount % _frameDurationArray.Length] = d;
+        }
+
+        private void RecordTimers()
+        {
         }
 
         private class RecorderEntry

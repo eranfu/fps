@@ -1,9 +1,7 @@
-﻿using Game.Main;
-using UnityEditor;
+﻿using UnityEditor;
 using UnityEngine;
-using Utils;
 
-namespace Assets.Scripts.EditorTools.Editor
+namespace Utils.EnumeratedArray.Editor
 {
     [CustomPropertyDrawer(typeof(EnumeratedArrayAttribute))]
     public class EnumeratedArrayDrawer : PropertyDrawer
