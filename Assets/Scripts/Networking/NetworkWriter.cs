@@ -1,7 +1,14 @@
-﻿namespace Networking
+﻿using IO;
+
+namespace Networking
 {
-    public class NetworkWriter
+    public struct NetworkWriter
     {
-        
+        private ByteOutputStream _output;
+
+        public NetworkWriter(byte[] buffer, NetworkSchema schema, bool generateSchema = false)
+        {
+            _output = new ByteOutputStream(buffer);
+        }
     }
 }
