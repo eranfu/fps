@@ -1,6 +1,6 @@
 ﻿namespace Networking
 {
-    public class NetWorkWriter
+    public class NetworkWriter
     {
         
     }
