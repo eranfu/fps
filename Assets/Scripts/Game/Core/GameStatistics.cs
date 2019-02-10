@@ -9,11 +9,11 @@ namespace Game.Core
 {
     public class GameStatistics
     {
-        [ConfigVar(Name = "show.fps", DefaultValue = "0", Description = "Set to value > 0 to see fps stats.")]
+        [ConfigVar(name = "show.fps", defaultValue = "0", description = "Set to value > 0 to see fps stats.")]
         public static ConfigVar showFps;
 
-        [ConfigVar(Name = "show.compact_stats", DefaultValue = "1",
-            Description = "Set to value > 0 to see compact stats.")]
+        [ConfigVar(name = "show.compact_stats", defaultValue = "1",
+            description = "Set to value > 0 to see compact stats.")]
         public static ConfigVar showCompactStats;
 
         private const int NoFrames = 128;

@@ -22,8 +22,8 @@ namespace Console
     {
         public delegate void MethodDelegate(string[] args);
 
-        [ConfigVar(Name = "config.showlastline", DefaultValue = "0",
-            Description = "Show last logged line briefly at top of screen")]
+        [ConfigVar(name = "config.showlastline", defaultValue = "0",
+            description = "Show last logged line briefly at top of screen")]
         private static ConfigVar _consoleShowLastLine;
 
         private static IConsoleUi _consoleUi;

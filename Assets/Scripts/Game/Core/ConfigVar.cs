@@ -9,10 +9,10 @@ namespace Game.Core
 {
     public class ConfigVarAttribute : Attribute
     {
-        public string Name = null;
-        public string DefaultValue = "";
-        public ConfigVar.Flags Flags = ConfigVar.Flags.None;
-        public string Description = "";
+        public string name = null;
+        public string defaultValue = "";
+        public ConfigVar.Flags flags = ConfigVar.Flags.None;
+        public string description = "";
     }
 
     public class ConfigVar
@@ -92,7 +92,7 @@ namespace Game.Core
 
                         var attr = fieldInfo.GetCustomAttribute<ConfigVarAttribute>(false);
                         Debug.Assert(type.FullName != null, "type.FullName != null");
-                        string name = attr.Name ?? $"{type.FullName.ToLower()}.{fieldInfo.Name.ToLower()}";
+                        string name = attr.name ?? $"{type.FullName.ToLower()}.{fieldInfo.Name.ToLower()}";
                         var var = (ConfigVar) fieldInfo.GetValue(null);
                         if (var != null)
                         {
@@ -101,9 +101,9 @@ namespace Game.Core
                             continue;
                         }
 
-                        var = new ConfigVar(name, attr.Description, attr.Flags)
+                        var = new ConfigVar(name, attr.description, attr.flags)
                         {
-                            Value = attr.DefaultValue
+                            Value = attr.defaultValue
                         };
                         RegisterConfigVar(var);
                         fieldInfo.SetValue(null, var);
