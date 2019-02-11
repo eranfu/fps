@@ -36,8 +36,8 @@ namespace ProjectLODLightmaps
         private void SetupRenderer()
         {
             Profiler.BeginSample("ProjectLODLightmapManager.SetupRender");
-            var projectors = FindObjectsOfType<ProjectLODLightmaps>();
-            foreach (var projector in projectors)
+            ProjectLODLightmaps[] projectors = FindObjectsOfType<ProjectLODLightmaps>();
+            foreach (ProjectLODLightmaps projector in projectors)
             {
                 projector.SetupRenderer();
             }

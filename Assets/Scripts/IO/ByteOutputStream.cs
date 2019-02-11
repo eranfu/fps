@@ -1,4 +1,5 @@
 ﻿using System.Net;
+using System.Text;
 using UnityEngine;
 
 namespace IO
@@ -146,6 +147,18 @@ namespace IO
 
         public void Flush()
         {
+        }
+
+        public void WriteString(string value, Encoding encoding)
+        {
+            Encoder encoder = encoding.GetEncoder();
+            char[] charArray = value.ToCharArray();
+            encoder.Convert(charArray, 0, charArray.Length, _buffer, _currentByteIndex + 1,
+                _buffer.Length - (_currentByteIndex + 2), true,
+                out int _, out int byteUsed, out bool completed);
+            Debug.Assert(completed, "Writing string overflow.");
+            _buffer[_currentByteIndex + 0] = (byte) byteUsed;
+            _currentByteIndex += 1 + byteUsed;
         }
     }
 }
