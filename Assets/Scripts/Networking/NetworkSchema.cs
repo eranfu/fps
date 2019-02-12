@@ -1,14 +1,20 @@
-﻿using System;
+﻿using System.Diagnostics;
 using System.Globalization;
-using Unity.Mathematics;
-using UnityEngine;
 using Utils;
 using Utils.Pool;
+using Debug = UnityEngine.Debug;
 
 namespace Networking
 {
     public class NetworkSchema
     {
+        [Conditional("DEVELOPMENT_BUILD"), Conditional("UNITY_EDITOR")]
+        public static void AddStatsToFieldBool(FieldInfo fieldInfo, bool value, bool prediction, int numBits)
+        {
+            ((FieldStats<FieldValueBool>) fieldInfo.stats)
+                .Add(new FieldValueBool(value), new FieldValueBool(prediction), numBits);
+        }
+
         public enum FieldType
         {
             Bool,
@@ -32,23 +38,23 @@ namespace Networking
                 switch (fieldInfo.fieldType)
                 {
                     case FieldType.Bool:
-                        return null;
+                        return new FieldStats<FieldValueBool>(fieldInfo);
                     case FieldType.Int:
-                        return null;
+                        return new FieldStats<FieldValueInt>(fieldInfo);
                     case FieldType.UInt:
-                        return null;
+                        return new FieldStats<FieldValueUInt>(fieldInfo);
                     case FieldType.Float:
-                        return null;
+                        return new FieldStats<FieldValueFloat>(fieldInfo);
                     case FieldType.Vector2:
-                        return null;
+                        return new FieldStats<FieldValueVector2>(fieldInfo);
                     case FieldType.Vector3:
-                        return null;
+                        return new FieldStats<FieldValueVector3>(fieldInfo);
                     case FieldType.Quaternion:
-                        return null;
+                        return new FieldStats<FieldValueQuaternion>(fieldInfo);
                     case FieldType.String:
-                        return null;
+                        return new FieldStats<FieldValueString>(fieldInfo);
                     case FieldType.ByteArray:
-                        return null;
+                        return new FieldStats<FieldValueByteArray>(fieldInfo);
                     default:
                         Debug.Assert(false, $"Error field type: {(int) fieldInfo.fieldType}");
                         return null;
@@ -80,14 +86,14 @@ namespace Networking
             private T _deltaMin;
             private T _deltaMax;
 
-            private FieldInfo _fieldInfo;
+            private readonly FieldInfo _fieldInfo;
 
             public FieldStats(FieldInfo fieldInfo)
             {
                 _fieldInfo = fieldInfo;
             }
 
-            public void Add(T value, T prediction, int bitsWritten)
+            public void Add(T value, T prediction, int numBits)
             {
                 this._value = value;
                 this._prediction = prediction;
@@ -113,7 +119,7 @@ namespace Networking
                 }
 
                 this.NumWrites++;
-                this.NumBitsWritten += bitsWritten;
+                this.NumBitsWritten += numBits;
             }
 
             public override string GetValue(bool showRaw)
@@ -497,39 +503,19 @@ namespace Networking
 
         public struct FieldValueByteArray : IFieldValue<FieldValueByteArray>
         {
-            private readonly byte[] _value;
-
-            public FieldValueByteArray(byte[] value)
-            {
-                _value = value;
-            }
-
-            public FieldValueByteArray(byte[] value, int valueOffset, int valueLength)
-            {
-                if (value != null)
-                {
-                    _value = new byte[valueLength];
-                    Array.Copy(value, valueOffset, _value, 0, valueLength);
-                }
-                else
-                {
-                    _value = null;
-                }
-            }
-
             public FieldValueByteArray Min(FieldValueByteArray other)
             {
-                return new FieldValueByteArray(null);
+                return new FieldValueByteArray();
             }
 
             public FieldValueByteArray Max(FieldValueByteArray other)
             {
-                return new FieldValueByteArray(null);
+                return new FieldValueByteArray();
             }
 
             public FieldValueByteArray Sub(FieldValueByteArray other)
             {
-                return new FieldValueByteArray(null);
+                return new FieldValueByteArray();
             }
 
             public string ToString(FieldInfo fieldInfo, bool showRaw)
