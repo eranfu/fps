@@ -1,4 +1,6 @@
-﻿using System.Diagnostics;
+﻿using System;
+using System.Collections.Generic;
+using System.Diagnostics;
 using System.Globalization;
 using Utils;
 using Utils.Pool;
@@ -8,11 +10,131 @@ namespace Networking
 {
     public class NetworkSchema
     {
+        private readonly List<FieldInfo> _fields = new List<FieldInfo>();
+        private int _nextByteOffset = 0;
+        private int _id;
+
+        public NetworkSchema(int id)
+        {
+            Debug.Assert(id >= 0 && id < NetworkConfig.MaxSchemaIds);
+            this._id = id;
+        }
+
+        public int GetByteSize()
+        {
+            return _nextByteOffset;
+        }
+
+        public void AddField(FieldInfo field)
+        {
+            Debug.Assert(_fields.Count < NetworkConfig.MaxFieldsPerSchema);
+            field.byteOffset = _nextByteOffset;
+            field.stats = FieldStatsBase.CreateFieldStats(field);
+            _fields.Add(field);
+            _nextByteOffset += CalcFieldByteSize(field);
+        }
+
+        private static int CalcFieldByteSize(FieldInfo field)
+        {
+            int size;
+            switch (field.fieldType)
+            {
+                case FieldType.Bool:
+                    size = 1;
+                    break;
+                case FieldType.Int:
+                case FieldType.UInt:
+                case FieldType.Float:
+                    size = (field.bits + 7) / 8;
+                    break;
+                case FieldType.Vector2:
+                    size = (field.bits + 7) / 8 * 2;
+                    break;
+                case FieldType.Vector3:
+                    size = (field.bits + 7) / 8 * 3;
+                    break;
+                case FieldType.Quaternion:
+                    size = (field.bits + 7) / 8 * 4;
+                    break;
+                case FieldType.String:
+                case FieldType.ByteArray:
+                    size = 2 + field.arraySize;
+                    break;
+                default:
+                    size = 0;
+                    Debug.Assert(false);
+                    break;
+            }
+
+            return size;
+        }
+
+        // Functions for updating stats on a field that can be conditionally excluded from the build
         [Conditional("DEVELOPMENT_BUILD"), Conditional("UNITY_EDITOR")]
         public static void AddStatsToFieldBool(FieldInfo fieldInfo, bool value, bool prediction, int numBits)
         {
-            ((FieldStats<FieldValueBool>) fieldInfo.stats)
-                .Add(new FieldValueBool(value), new FieldValueBool(prediction), numBits);
+            ((FieldStats<FieldValueBool>) fieldInfo.stats).Add(
+                new FieldValueBool(value), new FieldValueBool(prediction), numBits);
+        }
+
+        [Conditional("DEVELOPMENT_BUILD"), Conditional("UNITY_EDITOR")]
+        public static void AddStatsToFieldInt(FieldInfo fieldInfo, int value, int prediction, int numBits)
+        {
+            ((FieldStats<FieldValueInt>) fieldInfo.stats).Add(
+                new FieldValueInt(value), new FieldValueInt(prediction), numBits);
+        }
+
+        [Conditional("DEVELOPMENT_BUILD"), Conditional("UNITY_EDITOR")]
+        public static void AddStatsToFieldUInt(FieldInfo fieldInfo, uint value, uint prediction, int numBits)
+        {
+            ((FieldStats<FieldValueUInt>) fieldInfo.stats).Add(
+                new FieldValueUInt(value), new FieldValueUInt(prediction), numBits);
+        }
+
+        [Conditional("DEVELOPMENT_BUILD"), Conditional("UNITY_EDITOR")]
+        public static void AddStatsToFieldFloat(FieldInfo fieldInfo, uint value, uint prediction, int numBits)
+        {
+            ((FieldStats<FieldValueFloat>) fieldInfo.stats).Add(
+                new FieldValueFloat(value), new FieldValueFloat(prediction), numBits);
+        }
+
+        [Conditional("DEVELOPMENT_BUILD"), Conditional("UNITY_EDITOR")]
+        public static void AddStatsToFieldVector2(FieldInfo fieldInfo, uint vx, uint vy, uint px, uint py, int numBits)
+        {
+            ((FieldStats<FieldValueVector2>) fieldInfo.stats).Add(
+                new FieldValueVector2(vx, vy), new FieldValueVector2(px, py), numBits);
+        }
+
+        [Conditional("DEVELOPMENT_BUILD"), Conditional("UNITY_EDITOR")]
+        public static void AddStatsToFieldVector3(FieldInfo fieldInfo, uint vx, uint vy, uint vz, uint px, uint py,
+            uint pz, int numBits)
+        {
+            ((FieldStats<FieldValueVector3>) fieldInfo.stats).Add(
+                new FieldValueVector3(vx, vy, vz), new FieldValueVector3(px, py, pz), numBits);
+        }
+
+        [Conditional("DEVELOPMENT_BUILD"), Conditional("UNITY_EDITOR")]
+        public static void AddStatsToFieldQuaternion(FieldInfo fieldInfo, uint vx, uint vy, uint vz, uint vw, uint px,
+            uint py, uint pz, uint pw, int numBits)
+        {
+            ((FieldStats<FieldValueQuaternion>) fieldInfo.stats).Add(
+                new FieldValueQuaternion(vx, vy, vz, vw), new FieldValueQuaternion(px, py, pz, pw), numBits);
+        }
+
+        [Conditional("DEVELOPMENT_BUILD"), Conditional("UNITY_EDITOR")]
+        public static void AddStatsToFieldString(FieldInfo fieldInfo, byte[] valueBuffer, int valueOffset,
+            int valueLength, int numBits)
+        {
+            ((FieldStats<FieldValueString>) fieldInfo.stats).Add(
+                new FieldValueString(valueBuffer, valueOffset, valueLength), new FieldValueString(""), numBits);
+        }
+
+        [Conditional("DEVELOPMENT_BUILD"), Conditional("UNITY_EDITOR")]
+        public static void AddStatsToFieldByteArray(FieldInfo fieldInfo, byte[] valueBuffer, int valueOffset,
+            int valueLength, int numBits)
+        {
+            ((FieldStats<FieldValueByteArray>) fieldInfo.stats).Add(
+                new FieldValueByteArray(valueBuffer, valueOffset, valueLength), new FieldValueByteArray(), numBits);
         }
 
         public enum FieldType
@@ -503,6 +625,21 @@ namespace Networking
 
         public struct FieldValueByteArray : IFieldValue<FieldValueByteArray>
         {
+            private readonly byte[] _buffer;
+
+            public FieldValueByteArray(byte[] value, int offset, int length)
+            {
+                if (value != null)
+                {
+                    _buffer = new byte[length];
+                    Array.Copy(value, offset, _buffer, 0, length);
+                }
+                else
+                {
+                    _buffer = null;
+                }
+            }
+
             public FieldValueByteArray Min(FieldValueByteArray other)
             {
                 return new FieldValueByteArray();
