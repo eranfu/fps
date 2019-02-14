@@ -6,7 +6,7 @@ namespace IO
 {
     public struct ByteInputStream
     {
-        private byte[] _buffer;
+        private readonly byte[] _buffer;
         private int _currentByteIndex;
 
         public ByteInputStream(byte[] buffer) : this()
@@ -119,7 +119,10 @@ namespace IO
 
         public string ReadString(Encoding encoding)
         {
-            encoding.GetString()
+            int length = ReadUInt16();
+            string value = encoding.GetString(_buffer, _currentByteIndex, length);
+            _currentByteIndex += length;
+            return value;
         }
     }
 }
