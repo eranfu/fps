@@ -596,7 +596,7 @@ namespace Networking
                 else
                 {
                     char[] chars = BufferPool.Pop<char>(1024 * 32);
-                    int charLength = NetworkConfig.encoding.GetChars(valueBuffer, valueOffset, valueLength, chars, 0);
+                    int charLength = NetworkConfig.Encoding.GetChars(valueBuffer, valueOffset, valueLength, chars, 0);
                     _value = new string(chars, 0, charLength);
                     BufferPool.Push(chars);
                 }
