@@ -1,4 +1,4 @@
-﻿namespace IO
+﻿namespace Networking
 {
     public interface IInputStream
     {

@@ -69,6 +69,11 @@ namespace Networking
             return size;
         }
 
+        public static NetworkSchema ReadSchema<TInputStream>(ref TInputStream input) where TInputStream : IInputStream
+        {
+
+        }
+
         // Functions for updating stats on a field that can be conditionally excluded from the build
         [Conditional("DEVELOPMENT_BUILD"), Conditional("UNITY_EDITOR")]
         public static void AddStatsToFieldBool(FieldInfo fieldInfo, bool value, bool prediction, int numBits)

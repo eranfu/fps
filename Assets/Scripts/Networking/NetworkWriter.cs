@@ -1,6 +1,4 @@
-﻿using IO;
-
-namespace Networking
+﻿namespace Networking
 {
     public struct NetworkWriter
     {

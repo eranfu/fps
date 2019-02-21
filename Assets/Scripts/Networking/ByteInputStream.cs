@@ -2,7 +2,7 @@
 using System.Text;
 using UnityEngine;
 
-namespace IO
+namespace Networking
 {
     public struct ByteInputStream
     {
