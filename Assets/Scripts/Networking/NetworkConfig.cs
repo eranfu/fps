@@ -14,5 +14,14 @@ namespace Networking
         public const int MaxSchemaIds = MaxFixedSchemaIds + MaxEventTypeSchemaIds + MaxEntityTypeSchemaIds;
 
         public const int MaxFieldsPerSchema = 128;
+        public const int MaxContextsPerField = 4;
+        private const int MaxSkipContextsPerSchema = MaxContextsPerField / 4;
+        public const int MaxContextsPerSchema = MaxSkipContextsPerSchema + MaxFieldsPerSchema * MaxContextsPerField;
+
+        public const int MiscContext = 0;
+
+        public const int FirstSchemaContext = 16;
+
+        public const int MaxContexts = FirstSchemaContext + MaxSchemaIds * MaxContextsPerSchema;
     }
 }

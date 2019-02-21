@@ -71,7 +71,27 @@ namespace Networking
 
         public static NetworkSchema ReadSchema<TInputStream>(ref TInputStream input) where TInputStream : IInputStream
         {
+            var count = (int) input.ReadPackedUInt(NetworkConfig.MiscContext);
+            var id = (int) input.ReadPackedUInt(NetworkConfig.MiscContext);
+            var schema = new NetworkSchema(id);
+            for (var i = 0; i < count; i++)
+            {
+                var fieldInfo = new FieldInfo
+                {
+                    fieldType = (FieldType) input.ReadRawBits(4),
+                    delta = input.ReadRawBits(1) != 0,
+                    bits = (int) input.ReadRawBits(6),
+                    precision = (int) input.ReadRawBits(2),
+                    arraySize = (int) input.ReadRawBits(16),
+                    startContext = schema._fields.Count * NetworkConfig.MaxContextsPerField +
+                                   schema._id * NetworkConfig.MaxContextsPerSchema +
+                                   NetworkConfig.FirstSchemaContext,
+                    fieldMask = (byte) input.ReadRawBits(8)
+                };
+                schema.AddField(fieldInfo);
+            }
 
+            return schema;
         }
 
         // Functions for updating stats on a field that can be conditionally excluded from the build
