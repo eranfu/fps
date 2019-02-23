@@ -94,6 +94,145 @@ namespace Networking
             return schema;
         }
 
+        public static void WriteSchema<TOutputStream>(NetworkSchema schema, ref TOutputStream output)
+            where TOutputStream : IOutputStream
+        {
+            output.WritePackedUInt((uint) schema._fields.Count, NetworkConfig.MiscContext);
+            output.WritePackedUInt((uint) schema._id, NetworkConfig.MiscContext);
+            foreach (FieldInfo field in schema._fields)
+            {
+                output.WriteRawBits((uint) field.fieldType, 4);
+                output.WriteRawBits(field.delta ? 1u : 0u, 1);
+                output.WriteRawBits((uint) field.bits, 6);
+                output.WriteRawBits((uint) field.precision, 2);
+                output.WriteRawBits((uint) field.arraySize, 16);
+                output.WriteRawBits(field.fieldMask, 8);
+            }
+        }
+
+        public static void CopyFieldsFromBuffer<TOutputStream>(
+            NetworkSchema schema, byte[] inputBuffer, ref TOutputStream output) where TOutputStream : IOutputStream
+        {
+            var input = new ByteInputStream(inputBuffer);
+            foreach (FieldInfo field in schema._fields)
+            {
+                switch (field.fieldType)
+                {
+                    case FieldType.Bool:
+                    case FieldType.Int:
+                    case FieldType.UInt:
+                    case FieldType.Float:
+                        output.WriteRawBits(input.ReadBits(field.bits), field.bits);
+                        break;
+                    case FieldType.Vector2:
+                        output.WriteRawBits(input.ReadUInt32(), field.bits);
+                        output.WriteRawBits(input.ReadUInt32(), field.bits);
+                        break;
+                    case FieldType.Vector3:
+                        output.WriteRawBits(input.ReadUInt32(), field.bits);
+                        output.WriteRawBits(input.ReadUInt32(), field.bits);
+                        output.WriteRawBits(input.ReadUInt32(), field.bits);
+                        break;
+                    case FieldType.Quaternion:
+                        output.WriteRawBits(input.ReadUInt32(), field.bits);
+                        output.WriteRawBits(input.ReadUInt32(), field.bits);
+                        output.WriteRawBits(input.ReadUInt32(), field.bits);
+                        output.WriteRawBits(input.ReadUInt32(), field.bits);
+                        break;
+                    case FieldType.String:
+                    case FieldType.ByteArray:
+                    {
+                        input.GetByteArray(out byte[] buffer, out int startIndex, out int length, field.arraySize);
+                        output.WritePackedUInt((uint) length, field.startContext);
+                        output.WriteRawBytes(buffer, startIndex, length);
+                    }
+                        break;
+                    default:
+                        Debug.Assert(false);
+                        break;
+                }
+            }
+        }
+
+        public static void CopyFieldsToBuffer<TInputStream>(
+            NetworkSchema schema, ref TInputStream input, byte[] outputBuffer) where TInputStream : IInputStream
+        {
+            var output = new ByteOutputStream(outputBuffer);
+            foreach (FieldInfo field in schema._fields)
+            {
+                switch (field.fieldType)
+                {
+                    case FieldType.Bool:
+                    case FieldType.Int:
+                    case FieldType.UInt:
+                    case FieldType.Float:
+                        output.WriteBits(input.ReadRawBits(field.bits), field.bits);
+                        break;
+                    case FieldType.Vector2:
+                        output.WriteUInt32(input.ReadRawBits(field.bits));
+                        output.WriteUInt32(input.ReadRawBits(field.bits));
+                        break;
+                    case FieldType.Vector3:
+                        output.WriteUInt32(input.ReadRawBits(field.bits));
+                        output.WriteUInt32(input.ReadRawBits(field.bits));
+                        output.WriteUInt32(input.ReadRawBits(field.bits));
+                        break;
+                    case FieldType.Quaternion:
+                        output.WriteUInt32(input.ReadRawBits(field.bits));
+                        output.WriteUInt32(input.ReadRawBits(field.bits));
+                        output.WriteUInt32(input.ReadRawBits(field.bits));
+                        output.WriteUInt32(input.ReadRawBits(field.bits));
+                        break;
+                    case FieldType.String:
+                    case FieldType.ByteArray:
+                        output.CopyByteArray(ref input, field.arraySize, field.startContext);
+                        break;
+                    default:
+                        Debug.Assert(false);
+                        break;
+                }
+            }
+        }
+
+        public static void SkipFields<TInputStream>(NetworkSchema schema, ref TInputStream input)
+            where TInputStream : IInputStream
+        {
+            foreach (FieldInfo field in schema._fields)
+            {
+                switch (field.fieldType)
+                {
+                    case FieldType.Bool:
+                    case FieldType.Int:
+                    case FieldType.UInt:
+                    case FieldType.Float:
+                        input.ReadRawBits(field.bits);
+                        break;
+                    case FieldType.Vector2:
+                        input.ReadRawBits(field.bits);
+                        input.ReadRawBits(field.bits);
+                        break;
+                    case FieldType.Vector3:
+                        input.ReadRawBits(field.bits);
+                        input.ReadRawBits(field.bits);
+                        input.ReadRawBits(field.bits);
+                        break;
+                    case FieldType.Quaternion:
+                        input.ReadRawBits(field.bits);
+                        input.ReadRawBits(field.bits);
+                        input.ReadRawBits(field.bits);
+                        input.ReadRawBits(field.bits);
+                        break;
+                    case FieldType.String:
+                    case FieldType.ByteArray:
+                        input.SkipRawBytes((int) input.ReadPackedUInt(field.startContext));
+                        break;
+                    default:
+                        Debug.Assert(false);
+                        break;
+                }
+            }
+        }
+
         // Functions for updating stats on a field that can be conditionally excluded from the build
         [Conditional("DEVELOPMENT_BUILD"), Conditional("UNITY_EDITOR")]
         public static void AddStatsToFieldBool(FieldInfo fieldInfo, bool value, bool prediction, int numBits)

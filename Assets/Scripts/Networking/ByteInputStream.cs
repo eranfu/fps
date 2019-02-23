@@ -55,7 +55,7 @@ namespace Networking
             return (ushort) IPAddress.NetworkToHostOrder((short) ReadUInt16());
         }
 
-        private uint ReadUInt32()
+        public uint ReadUInt32()
         {
             var value = (uint) (
                 _buffer[_currentByteIndex + 0] |

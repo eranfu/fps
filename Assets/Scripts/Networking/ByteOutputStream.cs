@@ -59,7 +59,7 @@ namespace Networking
             WriteUInt16((ushort) IPAddress.HostToNetworkOrder((short) value));
         }
 
-        private void WriteUInt32(uint value)
+        public void WriteUInt32(uint value)
         {
             _buffer[_currentByteIndex + 0] = (byte) value;
             _buffer[_currentByteIndex + 1] = (byte) (value >> 8);
