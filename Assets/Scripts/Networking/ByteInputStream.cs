@@ -61,7 +61,7 @@ namespace Networking
                 _buffer[_currentByteIndex + 0] |
                 _buffer[_currentByteIndex + 1] << 8 |
                 _buffer[_currentByteIndex + 2] << 16 |
-                _buffer[_currentByteIndex + 3] << 32);
+                _buffer[_currentByteIndex + 3] << 24);
             _currentByteIndex += 4;
             return value;
         }
@@ -91,7 +91,7 @@ namespace Networking
         public void ReadBytes(byte[] dest, int destIndex, int length, int maxCount)
         {
             if (dest != null)
-                IoUtils.MemCopy(_buffer, _currentByteIndex, dest, destIndex, length);
+                NetworkUtils.MemCopy(_buffer, _currentByteIndex, dest, destIndex, length);
             _currentByteIndex += maxCount;
         }
 

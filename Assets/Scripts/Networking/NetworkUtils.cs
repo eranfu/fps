@@ -1,6 +1,6 @@
 ﻿namespace Networking
 {
-    public static class IoUtils
+    public static class NetworkUtils
     {
         public static void MemCopy(byte[] src, int srcIndex, byte[] dest, int destIndex, int count)
         {

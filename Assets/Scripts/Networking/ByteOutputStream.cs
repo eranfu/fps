@@ -76,14 +76,14 @@ namespace Networking
         private void WriteBytes(byte[] data, int srcIndex, int length)
         {
             Debug.Assert(data != null);
-            IoUtils.MemCopy(data, srcIndex, _buffer, _currentByteIndex, length);
+            NetworkUtils.MemCopy(data, srcIndex, _buffer, _currentByteIndex, length);
             _currentByteIndex += length;
         }
 
         private void WriteBytesOffset(byte[] data, int srcIndex, int offset, int length)
         {
             Debug.Assert(data != null);
-            IoUtils.MemCopy(data, srcIndex, _buffer, offset, length);
+            NetworkUtils.MemCopy(data, srcIndex, _buffer, offset, length);
             _currentByteIndex = offset + length;
         }
 
