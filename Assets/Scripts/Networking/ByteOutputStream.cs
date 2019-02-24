@@ -40,13 +40,13 @@ namespace Networking
             }
         }
 
-        private void WriteUInt8(byte value)
+        public void WriteUInt8(byte value)
         {
             _buffer[_currentByteIndex + 0] = value;
             _currentByteIndex += 1;
         }
 
-        private void WriteUInt16(ushort value)
+        public void WriteUInt16(ushort value)
         {
             _buffer[_currentByteIndex + 0] = (byte) value;
             _buffer[_currentByteIndex + 1] = (byte) (value >> 8);
