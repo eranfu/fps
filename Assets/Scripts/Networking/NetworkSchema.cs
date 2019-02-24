@@ -20,9 +20,21 @@ namespace Networking
             this._id = id;
         }
 
+        public int GetNextFieldStartContext()
+        {
+            return _fields.Count * NetworkConfig.MaxContextsPerField + _id * NetworkConfig.MaxContextsPerSchema +
+                   NetworkConfig.FirstSchemaContext;
+        }
+
         public int GetByteSize()
         {
             return _nextByteOffset;
+        }
+
+        public FieldInfo GetField(int index)
+        {
+            Debug.Assert(index >= 0 && index < _fields.Count);
+            return _fields[index];
         }
 
         public void AddField(FieldInfo field)
@@ -83,9 +95,7 @@ namespace Networking
                     bits = (int) input.ReadRawBits(6),
                     precision = (int) input.ReadRawBits(2),
                     arraySize = (int) input.ReadRawBits(16),
-                    startContext = schema._fields.Count * NetworkConfig.MaxContextsPerField +
-                                   schema._id * NetworkConfig.MaxContextsPerSchema +
-                                   NetworkConfig.FirstSchemaContext,
+                    startContext = schema.GetNextFieldStartContext(),
                     fieldMask = (byte) input.ReadRawBits(8)
                 };
                 schema.AddField(fieldInfo);
