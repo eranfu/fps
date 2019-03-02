@@ -87,9 +87,9 @@ namespace Networking
             _currentByteIndex = offset + length;
         }
 
-        public void WriteByteArray(byte[] data, int srcIndex, int length, int maxCount)
+        public void WriteByteArray(byte[] data, int srcIndex, int length, int maxLength)
         {
-            Debug.Assert(length <= maxCount);
+            Debug.Assert(length <= maxLength);
             WriteUInt16((ushort) length);
 
             var i = 0;
@@ -98,12 +98,12 @@ namespace Networking
                 _buffer[_currentByteIndex + i] = data[srcIndex + i];
             }
 
-            for (; i < maxCount; i++)
+            for (; i < maxLength; i++)
             {
                 _buffer[_currentByteIndex + i] = 0;
             }
 
-            _currentByteIndex += maxCount;
+            _currentByteIndex += maxLength;
         }
 
         public void CopyByteArray<T>(ref T input, int maxCount, int context) where T : IInputStream

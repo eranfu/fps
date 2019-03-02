@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
 
 namespace Utils.Pool
@@ -35,7 +34,6 @@ namespace Utils.Pool
             public static void Push(T[] buffer)
             {
                 Debug.Assert(buffer != null);
-                Array.Clear(buffer, 0, buffer.Length);
                 Pool.Push(buffer);
             }
         }
