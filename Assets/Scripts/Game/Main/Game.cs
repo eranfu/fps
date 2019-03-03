@@ -8,25 +8,25 @@ namespace Game.Main
 {
     public struct GameTime
     {
-        private int _tickRate;
+        private int _ticksPerSecond;
 
         /// <summary>
         /// Number of ticks per second.
         /// </summary>
-        public int TickRate
+        public int TicksPerSecond
         {
-            get => _tickRate;
+            get => _ticksPerSecond;
             set
             {
-                _tickRate = value;
-                TickInterval = 1.0f / _tickRate;
+                _ticksPerSecond = value;
+                SecondsPerTick = 1.0f / _ticksPerSecond;
             }
         }
 
         /// <summary>
         /// Duration between ticks in seconds at current tick rate.
         /// </summary>
-        public float TickInterval { get; private set; }
+        public float SecondsPerTick { get; private set; }
 
         /// <summary>
         /// Current tick.
@@ -38,12 +38,12 @@ namespace Game.Main
         /// </summary>
         public float TickDuration { get; private set; }
 
-        public float TickDurationAsFraction => TickDuration / TickInterval;
+        public float TickDurationAsFraction => TickDuration / SecondsPerTick;
 
-        public GameTime(int tickRate)
+        public GameTime(int ticksPerSecond)
         {
-            _tickRate = tickRate;
-            TickInterval = 1.0f / _tickRate;
+            _ticksPerSecond = ticksPerSecond;
+            SecondsPerTick = 1.0f / _ticksPerSecond;
             Tick = 1;
             TickDuration = 0;
         }
@@ -56,21 +56,21 @@ namespace Game.Main
 
         public float DurationSinceTick(int tick)
         {
-            return (Tick - tick) * TickInterval + TickDuration;
+            return (Tick - tick) * SecondsPerTick + TickDuration;
         }
 
         public void AddDuration(float duration)
         {
             TickDuration += duration;
-            var deltaTicks = (int) math.floor(TickDuration * TickRate);
+            var deltaTicks = (int) math.floor(TickDuration * TicksPerSecond);
             Tick += deltaTicks;
-            TickDuration %= TickInterval;
+            TickDuration %= SecondsPerTick;
         }
 
         public static float GetDuration(GameTime start, GameTime end)
         {
-            return (end.Tick * end.TickInterval + end.TickDuration) -
-                   (start.Tick * start.TickInterval + start.TickDuration);
+            return (end.Tick * end.SecondsPerTick + end.TickDuration) -
+                   (start.Tick * start.SecondsPerTick + start.TickDuration);
         }
     }
 

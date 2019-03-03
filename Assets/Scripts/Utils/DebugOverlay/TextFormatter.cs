@@ -33,6 +33,13 @@ namespace Utils.DebugOverlay
                 null, null, null, null, null, null);
         }
 
+        public static int Write<T0>(ref char[] destBuf, int destIndex, string format, T0 arg0)
+        {
+            return Write<T0, NoArg, NoArg, NoArg, NoArg, NoArg>(
+                ref destBuf, destIndex, format,
+                arg0, null, null, null, null, null);
+        }
+
         private static int Write<T0, T1, T2, T3, T4, T5>(
             ref char[] destBuf, int destIndex, string format,
             T0 arg0, T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5)

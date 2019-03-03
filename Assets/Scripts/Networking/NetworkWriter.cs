@@ -147,16 +147,16 @@ namespace Networking
                 value = "";
             }
 
-            char[] buffer = BufferPool.Pop<char>(value.Length);
+            char[] buffer = Pools.Buffer.Pop<char>(value.Length);
             value.CopyTo(0, buffer, 0, value.Length);
             WriteString(name, buffer, value.Length, maxLength, overrunBehaviour);
-            BufferPool.Push(buffer);
+            Pools.Buffer.Push(buffer);
         }
 
         public void WriteString(string name, char[] value, int length, int maxLength, OverrunBehaviour overrunBehaviour)
         {
             ValidateOrGenerateSchema(name, NetworkSchema.FieldType.String, 0, false, 0, maxLength);
-            byte[] buffer = BufferPool.Pop<byte>(maxLength);
+            byte[] buffer = Pools.Buffer.Pop<byte>(maxLength);
             int byteCount = NetworkConfig.Encoding.GetBytes(value, 0, length, buffer, 0);
             if (byteCount > maxLength)
             {
@@ -183,7 +183,7 @@ namespace Networking
             }
 
             _output.WriteByteArray(buffer, 0, byteCount, maxLength);
-            BufferPool.Push(buffer);
+            Pools.Buffer.Push(buffer);
         }
 
         public void WriteBytes(string name, byte[] value, int startIndex, int length, int maxLength)

@@ -86,7 +86,7 @@ namespace Console
 
         public static void RemoveCommandsWithTag(int tag)
         {
-            var removeList = SimpleObjectPool.Pop<List<string>>();
+            var removeList = Pools.SimpleObject.Pop<List<string>>();
             foreach (var command in Commands.Values)
             {
                 if (command.tag == tag)
@@ -100,13 +100,13 @@ namespace Console
                 RemoveCommand(name);
             }
 
-            SimpleObjectPool.Push(removeList);
+            Pools.SimpleObject.Push(removeList);
         }
 
         public static void ProcessCommandLineArgument(string[] arguments)
         {
             OutputString($"ProcessCommandLineArguments: {string.Join(" ", arguments)}");
-            var commands = SimpleObjectPool.Pop<List<string>>();
+            var commands = Pools.SimpleObject.Pop<List<string>>();
             foreach (string argument in arguments)
             {
                 bool newCommandStarting = argument.StartsWith("+") || argument.StartsWith("-");
@@ -155,7 +155,7 @@ namespace Console
             double lastMessageTime = Game.Main.Game.frameTime - _timeLastMessage;
             if (lastMessageTime < 1)
             {
-                DebugOverlay.Write(0, 0, _lastMessage);
+                DebugOverlay.WriteString(0, 0, _lastMessage);
             }
         }
 

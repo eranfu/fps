@@ -10,7 +10,7 @@ namespace Utils.DebugOverlay
         {
             base.PrepareBuffer();
 
-            var activeTexture = RenderTexture.active;
+            RenderTexture activeTexture = RenderTexture.active;
             float width;
             float height;
             if (activeTexture != null)
@@ -31,6 +31,18 @@ namespace Utils.DebugOverlay
                     1.0f / width,
                     1.0f / height
                 ));
+        }
+
+        public unsafe void AddLine(float x1, float y1, float x2, float y2, Vector4 col)
+        {
+            fixed (LineInstanceData* d = &DataArray[AddData()])
+            {
+                d->color = col;
+                d->position.x = x1;
+                d->position.y = y1;
+                d->position.z = x2;
+                d->position.w = y2;
+            }
         }
     }
 
