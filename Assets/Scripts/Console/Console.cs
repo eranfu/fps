@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using Game.Core;
 using UnityEngine;
 using Utils.DebugOverlay;
@@ -22,6 +23,8 @@ namespace Console
     {
         public delegate void MethodDelegate(string[] args);
 
+        private const int HistoryCount = 50;
+
         [ConfigVar(name = "config.showlastline", defaultValue = "0",
             description = "Show last logged line briefly at top of screen")]
         private static ConfigVar _consoleShowLastLine;
@@ -31,6 +34,9 @@ namespace Console
         private static double _timeLastMessage;
         private static readonly Dictionary<string, ConsoleCommand> Commands = new Dictionary<string, ConsoleCommand>();
         private static readonly List<string> PendingCommands = new List<string>();
+        private static readonly string[] History = new string[HistoryCount];
+        private static int HistoryNextIndex = 0;
+        private static int HistoryIndex = 0;
 
         public static void Init(IConsoleUi consoleUi)
         {
@@ -87,18 +93,11 @@ namespace Console
         public static void RemoveCommandsWithTag(int tag)
         {
             var removeList = Pools.SimpleObject.Pop<List<string>>();
-            foreach (var command in Commands.Values)
-            {
+            foreach (ConsoleCommand command in Commands.Values)
                 if (command.tag == tag)
-                {
                     removeList.Add(command.name);
-                }
-            }
 
-            foreach (string name in removeList)
-            {
-                RemoveCommand(name);
-            }
+            foreach (string name in removeList) RemoveCommand(name);
 
             Pools.SimpleObject.Push(removeList);
         }
@@ -112,10 +111,7 @@ namespace Console
                 bool newCommandStarting = argument.StartsWith("+") || argument.StartsWith("-");
 
                 // skip leading arguments before we have seen '+' or '-'
-                if (commands.Count == 0 && !newCommandStarting)
-                {
-                    continue;
-                }
+                if (commands.Count == 0 && !newCommandStarting) continue;
 
                 if (newCommandStarting)
                 {
@@ -128,16 +124,21 @@ namespace Console
                 }
             }
 
-            foreach (string command in commands)
-            {
-                EnqueueCommandNoHistory(command.Substring(1));
-            }
+            foreach (string command in commands) EnqueueCommandNoHistory(command.Substring(1));
         }
 
         public static void EnqueueCommandNoHistory(string command)
         {
             Debug.Log($"cmd: {command}");
             PendingCommands.Add(command);
+        }
+
+        public static void EnqueueCommand(string command)
+        {
+            History[HistoryNextIndex % HistoryCount] = command;
+            HistoryNextIndex++;
+            HistoryIndex = HistoryNextIndex;
+            EnqueueCommandNoHistory(command);
         }
 
         public static bool IsOpen()
@@ -153,15 +154,45 @@ namespace Console
         public static void ConsoleUpdate()
         {
             double lastMessageTime = Game.Main.Game.frameTime - _timeLastMessage;
-            if (lastMessageTime < 1)
-            {
-                DebugOverlay.WriteString(0, 0, _lastMessage);
-            }
+            if (lastMessageTime < 1) DebugOverlay.WriteString(0, 0, _lastMessage);
         }
 
         private static void CmdExec(string[] args)
         {
-            throw new NotImplementedException();
+            var silent = false;
+            var fileName = "";
+            if (args.Length == 1)
+            {
+                fileName = args[0];
+            }
+            else if (args.Length == 2 && args[0] == "-s")
+            {
+                silent = true;
+                fileName = args[1];
+            }
+            else
+            {
+                OutputString("Usage: exec [-s] <filename>");
+                return;
+            }
+
+            try
+            {
+                string[] lines = File.ReadAllLines(fileName);
+                PendingCommands.InsertRange(0, lines);
+                if (PendingCommands.Count > 128)
+                {
+                    PendingCommands.Clear();
+                    OutputString("Command overflow. Flushing pending commands!!!");
+                }
+            }
+            catch (Exception e)
+            {
+                if (!silent)
+                {
+                    OutputString($"Exec failed: {e.Message}");
+                }
+            }
         }
 
         private static void CmdWaitLoad(string[] args)
@@ -186,10 +217,10 @@ namespace Console
 
         private class ConsoleCommand
         {
-            public string name;
-            public MethodDelegate method;
+            public readonly string name;
+            public readonly int tag;
             public string description;
-            public int tag;
+            public MethodDelegate method;
 
             public ConsoleCommand(string name, MethodDelegate method, string description, int tag)
             {

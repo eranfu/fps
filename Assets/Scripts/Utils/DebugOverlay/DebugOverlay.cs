@@ -8,7 +8,7 @@ using Utils.Pool;
 
 namespace Utils.DebugOverlay
 {
-    public class DebugOverlay : ScriptableObject
+    public class DebugOverlay : MonoBehaviour
     {
         private static DebugOverlay _instance;
         public static int Width => _instance.width;

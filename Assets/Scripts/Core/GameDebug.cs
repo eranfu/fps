@@ -36,7 +36,7 @@ namespace Core
                 try
                 {
                     filePath = $"{logFilePath}/{logBaseName}{(i == 0 ? "" : $"_{i}")}.log";
-                    var logFile = File.CreateText(filePath);
+                    StreamWriter logFile = File.CreateText(filePath);
                     logFile.AutoFlush = true;
                     _logQueue = new ConcurrentQueue<string>();
                     _logEvent = new AutoResetEvent(false);
@@ -61,6 +61,7 @@ namespace Core
                             }
                         }
                     });
+                    _writeFileThread.Start();
                     break;
                 }
                 catch

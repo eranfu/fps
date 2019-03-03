@@ -30,6 +30,12 @@ namespace Game.Core
 
         private readonly RecorderEntry[] _recorderList =
         {
+            new RecorderEntry {name = "RenderLoop.Draw"},
+            new RecorderEntry {name = "Shadows.Draw"},
+            new RecorderEntry {name = "RenderLoopNewBatcher.Draw"},
+            new RecorderEntry {name = "ShadowLoopNewBatcher.Draw"},
+            new RecorderEntry {name = "RenderLoopDevice.Idle"},
+            new RecorderEntry {name = "StaticBatchDraw.Count"}
         };
 
         private readonly Stopwatch _stopWatch;
@@ -53,7 +59,8 @@ namespace Game.Core
             foreach (RecorderEntry recorderEntry in _recorderList)
             {
                 Sampler sampler = Sampler.Get(recorderEntry.name);
-                if (sampler != null) recorderEntry.recorder = sampler.GetRecorder();
+                if (sampler != null)
+                    recorderEntry.recorder = sampler.GetRecorder();
             }
 
             Console.Console.AddCommand("show.profilers", CmdShowProfilers, "Show available profilers.");

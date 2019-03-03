@@ -1,8 +1,18 @@
-﻿using Game.Core;
+﻿using System;
+using System.Diagnostics;
+using System.IO;
+using System.Linq;
+using Build;
+using Console;
+using Core;
+using Game.Core;
 using Unity.Mathematics;
 using UnityEngine;
+using Utils.DebugOverlay;
 using Utils.EnumeratedArray;
 using Utils.WeakAssetReference;
+using Debug = UnityEngine.Debug;
+using RenderSettings = Render.RenderSettings;
 
 namespace Game.Main
 {
@@ -11,7 +21,7 @@ namespace Game.Main
         private int _ticksPerSecond;
 
         /// <summary>
-        /// Number of ticks per second.
+        ///     Number of ticks per second.
         /// </summary>
         public int TicksPerSecond
         {
@@ -24,17 +34,17 @@ namespace Game.Main
         }
 
         /// <summary>
-        /// Duration between ticks in seconds at current tick rate.
+        ///     Duration between ticks in seconds at current tick rate.
         /// </summary>
         public float SecondsPerTick { get; private set; }
 
         /// <summary>
-        /// Current tick.
+        ///     Current tick.
         /// </summary>
         public int Tick { get; private set; }
 
         /// <summary>
-        /// Duration of current tick.
+        ///     Duration of current tick.
         /// </summary>
         public float TickDuration { get; private set; }
 
@@ -69,7 +79,7 @@ namespace Game.Main
 
         public static float GetDuration(GameTime start, GameTime end)
         {
-            return (end.Tick * end.SecondsPerTick + end.TickDuration) -
+            return end.Tick * end.SecondsPerTick + end.TickDuration -
                    (start.Tick * start.SecondsPerTick + start.TickDuration);
         }
     }
@@ -79,18 +89,190 @@ namespace Game.Main
     {
         public delegate void UpdateDelegate();
 
-        public static double frameTime;
-
-        public WeakAssetReference movableBoxPrototype;
-
-        [EnumeratedArray(typeof(GameColor))] public Color[] gameColor;
-
-        public GameStatistics GameStatistics { get; private set; }
-
         public enum GameColor
         {
             Friend,
             Enemy
+        }
+
+        private const string UserConfigFileName = "user.cfg";
+        private const string BootConfigFileName = "boot.cfg";
+
+        public static double frameTime;
+        public static Game game;
+
+        [ConfigVar(name = "server.tickrate", defaultValue = "60", description = "TickRate for server",
+            flags = ConfigVar.Flags.ServerInfo)]
+        private static ConfigVar _serverTickRate;
+
+        private Stopwatch _clock;
+        private DebugOverlay _debugOverlay;
+        private bool _isHeadless;
+        private long _stopWatchFrequency;
+
+        [EnumeratedArray(typeof(GameColor))] public Color[] gameColor;
+
+        public WeakAssetReference movableBoxPrototype;
+
+        public string BuildId { get; private set; }
+
+        public GameStatistics GameStatistics { get; private set; }
+        public static event UpdateDelegate EndUpdateEvent;
+
+        private void Awake()
+        {
+            Debug.Assert(game == null);
+            DontDestroyOnLoad(gameObject);
+            game = this;
+
+            _stopWatchFrequency = Stopwatch.Frequency;
+            _clock = new Stopwatch();
+            _clock.Start();
+
+            var buildInfo = FindObjectOfType<BuildInfo>();
+            if (buildInfo != null)
+                BuildId = buildInfo.GetBuildId();
+
+            string[] commandLineArgs = Environment.GetCommandLineArgs();
+
+#if UNITY_STANDALONE_LINUX
+            _isHeadless = true;
+#else
+            _isHeadless = commandLineArgs.Contains("-batchmode");
+#endif
+
+            bool consoleRestoreFocus = commandLineArgs.Contains("-consolerestorefocus");
+
+            if (_isHeadless)
+            {
+#if UNITY_STANDALONE_WIN
+                string overrideTitle = ArgumentForOption(commandLineArgs, "-title");
+                string consoleTitle = overrideTitle ?? $"{Application.productName} Console";
+                consoleTitle = $"{consoleTitle} [{Process.GetCurrentProcess().Id}]";
+
+                var consoleUi = new ConsoleTextWin(consoleTitle, consoleRestoreFocus);
+#elif UNITY_STANDALONE_LINUX
+                var consoleUi = new ConsoleTextLinux();
+#else
+                Debug.Log("Starting without a console");
+                var consoleUi = new ConsoleNullUi();
+#endif
+
+                Console.Console.Init(consoleUi);
+            }
+            else
+            {
+                ConsoleGUI consoleUi = Instantiate(Resources.Load<ConsoleGUI>("Prefabs/ConsoleGui"));
+                DontDestroyOnLoad(consoleUi);
+                Console.Console.Init(consoleUi);
+
+                _debugOverlay = Instantiate(Resources.Load<DebugOverlay>("DebugOverlay"));
+                DontDestroyOnLoad(_debugOverlay);
+                _debugOverlay.Init();
+
+                // todo debug render
+//                if (RenderPipelineManager.currentPipeline is HDRenderPipeline hdPipe)
+//                {
+//                }
+
+                GameStatistics = new GameStatistics();
+            }
+
+            string logfileArg = ArgumentForOption(commandLineArgs, "-logfile");
+            string engineLogFileLocation = logfileArg != null ? Path.GetDirectoryName(logfileArg) : ".";
+
+            string logName = _isHeadless ? $"game_{DateTime.UtcNow:yyyyMMdd_HHmmss_fff}" : "game";
+            GameDebug.Init(engineLogFileLocation, logName);
+
+            ConfigVar.Init();
+
+            Console.Console.EnqueueCommandNoHistory($"exec -s {UserConfigFileName}");
+
+            Application.targetFrameRate = -1;
+
+            if (_isHeadless)
+            {
+                Application.targetFrameRate = _serverTickRate.IntValue;
+                QualitySettings.vSyncCount = 0;
+
+#if !UNITY_STANDALONE_LINUX
+                if (!commandLineArgs.Contains("-nographics")) Debug.LogWarning("running -batchmod without -nographics");
+#endif
+            }
+            else
+            {
+                RenderSettings.Init();
+            }
+
+            if (!commandLineArgs.Contains("-noboot"))
+                Console.Console.EnqueueCommandNoHistory($"exec -s {BootConfigFileName}");
+
+
+        }
+
+        private static string ArgumentForOption(string[] args, string option)
+        {
+            int idx = Array.IndexOf(args, option);
+            if (idx < 0)
+                return null;
+            return idx < args.Length - 1 ? args[idx + 1] : "";
+        }
+
+        public static class Input
+        {
+            [Flags]
+            public enum Blocker : uint
+            {
+                None = 0,
+                Console = 1,
+                Chat = 2,
+                Debug = 3
+            }
+
+            private static Blocker _blocks;
+
+            public static void SetBlock(Blocker block, bool value)
+            {
+                if (value)
+                    _blocks |= block;
+                else
+                    _blocks &= ~block;
+            }
+
+            public static float GetAxisRaw(string axis)
+            {
+                return _blocks != Blocker.None ? 0.0f : UnityEngine.Input.GetAxisRaw(axis);
+            }
+
+            public static bool GetKeyDown(KeyCode key)
+            {
+                return _blocks == Blocker.None && UnityEngine.Input.GetKeyDown(key);
+            }
+
+            public static bool GetKey(KeyCode key)
+            {
+                return _blocks == Blocker.None && UnityEngine.Input.GetKey(key);
+            }
+
+            public static bool GetKeyUp(KeyCode key)
+            {
+                return _blocks == Blocker.None && UnityEngine.Input.GetKeyUp(key);
+            }
+
+            public static bool GetMouseButton(int button)
+            {
+                return _blocks == Blocker.None && UnityEngine.Input.GetMouseButton(button);
+            }
+        }
+
+        public interface IGameLoop
+        {
+            bool Init(string[] args);
+            void Shutdown();
+
+            void Update();
+            void FixedUpdate();
+            void LateUpdate();
         }
     }
 }
