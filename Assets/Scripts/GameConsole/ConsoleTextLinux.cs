@@ -2,7 +2,7 @@
 
 #if !UNITY_STANDALONE_LINUX
 
-namespace Console
+namespace GameConsole
 {
     public class ConsoleTextLinux : IConsoleUi
     {

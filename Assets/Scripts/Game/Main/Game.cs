@@ -3,14 +3,15 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using Build;
-using Console;
 using Core;
 using Game.Core;
+using GameConsole;
 using Unity.Mathematics;
 using UnityEngine;
 using Utils.DebugOverlay;
 using Utils.EnumeratedArray;
 using Utils.WeakAssetReference;
+using Console = GameConsole.Console;
 using Debug = UnityEngine.Debug;
 using RenderSettings = Render.RenderSettings;
 
@@ -154,17 +155,17 @@ namespace Game.Main
 #elif UNITY_STANDALONE_LINUX
                 var consoleUi = new ConsoleTextLinux();
 #else
-                Debug.Log("Starting without a console");
+                Debug.LogWarning("Starting without a console");
                 var consoleUi = new ConsoleNullUi();
 #endif
 
-                Console.Console.Init(consoleUi);
+                Console.Init(consoleUi);
             }
             else
             {
                 ConsoleGUI consoleUi = Instantiate(Resources.Load<ConsoleGUI>("Prefabs/ConsoleGui"));
                 DontDestroyOnLoad(consoleUi);
-                Console.Console.Init(consoleUi);
+                Console.Init(consoleUi);
 
                 _debugOverlay = Instantiate(Resources.Load<DebugOverlay>("DebugOverlay"));
                 DontDestroyOnLoad(_debugOverlay);
@@ -173,6 +174,7 @@ namespace Game.Main
                 // todo debug render
 //                if (RenderPipelineManager.currentPipeline is HDRenderPipeline hdPipe)
 //                {
+//                    hdPipe
 //                }
 
                 GameStatistics = new GameStatistics();
@@ -186,7 +188,14 @@ namespace Game.Main
 
             ConfigVar.Init();
 
-            Console.Console.EnqueueCommandNoHistory($"exec -s {UserConfigFileName}");
+            // Support -port and -query_port as per player standard
+            string serverPort = ArgumentForOption(commandLineArgs, "-port");
+            if (serverPort != null)
+            {
+                Console.EnqueueCommandNoHistory($"server.port {serverPort}");
+            }
+
+            Console.EnqueueCommandNoHistory($"exec -s {UserConfigFileName}");
 
             Application.targetFrameRate = -1;
 
@@ -196,7 +205,8 @@ namespace Game.Main
                 QualitySettings.vSyncCount = 0;
 
 #if !UNITY_STANDALONE_LINUX
-                if (!commandLineArgs.Contains("-nographics")) Debug.LogWarning("running -batchmod without -nographics");
+                if (!commandLineArgs.Contains("-nographics"))
+                    Debug.LogWarning("running -batchmod without -nographics");
 #endif
             }
             else
@@ -205,9 +215,7 @@ namespace Game.Main
             }
 
             if (!commandLineArgs.Contains("-noboot"))
-                Console.Console.EnqueueCommandNoHistory($"exec -s {BootConfigFileName}");
-
-
+                Console.EnqueueCommandNoHistory($"exec -s {BootConfigFileName}");
         }
 
         private static string ArgumentForOption(string[] args, string option)

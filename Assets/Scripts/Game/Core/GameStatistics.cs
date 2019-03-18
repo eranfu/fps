@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Diagnostics;
 using Game.Entity;
+using GameConsole;
 using Unity.Mathematics;
 using UnityEngine;
 using UnityEngine.Profiling;
@@ -63,7 +64,7 @@ namespace Game.Core
                     recorderEntry.recorder = sampler.GetRecorder();
             }
 
-            Console.Console.AddCommand("show.profilers", CmdShowProfilers, "Show available profilers.");
+            Console.AddCommand("show.profilers", CmdShowProfilers, "Show available profilers.");
         }
 
         private void CmdShowProfilers(string[] args)
@@ -74,7 +75,7 @@ namespace Game.Core
             string search = args.Length > 0 ? args[0].ToLower() : null;
             foreach (string name in names)
                 if (search == null || name.ToLower().Contains(search))
-                    Console.Console.Write(name);
+                    Console.Write(name);
 
             names.Clear();
             Pools.SimpleObject.Push(names);

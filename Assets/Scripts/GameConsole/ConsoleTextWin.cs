@@ -4,7 +4,7 @@ using System.IO;
 using System.Runtime.InteropServices;
 using UnityEngine;
 
-namespace Console
+namespace GameConsole
 {
     public class ConsoleTextWin : IConsoleUi
     {

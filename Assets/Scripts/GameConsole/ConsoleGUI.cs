@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
 using UnityEngine.UI;
 
-namespace Console
+namespace GameConsole
 {
     public class ConsoleGUI : MonoBehaviour, IConsoleUi
     {

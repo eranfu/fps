@@ -1,4 +1,4 @@
-﻿namespace Console
+﻿namespace GameConsole
 {
     public class ConsoleNullUi : IConsoleUi
     {

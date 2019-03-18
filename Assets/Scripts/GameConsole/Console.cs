@@ -6,7 +6,7 @@ using UnityEngine;
 using Utils.DebugOverlay;
 using Utils.Pool;
 
-namespace Console
+namespace GameConsole
 {
     public interface IConsoleUi
     {
