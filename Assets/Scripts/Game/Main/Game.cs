@@ -2,12 +2,14 @@
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using Audio;
 using Build;
 using Core;
 using Game.Core;
 using GameConsole;
 using Unity.Mathematics;
 using UnityEngine;
+using UnityEngine.Audio;
 using Utils.DebugOverlay;
 using Utils.EnumeratedArray;
 using Utils.WeakAssetReference;
@@ -109,7 +111,9 @@ namespace Game.Main
         private Stopwatch _clock;
         private DebugOverlay _debugOverlay;
         private bool _isHeadless;
+        private ISoundSystem _soundSystem;
         private long _stopWatchFrequency;
+        [SerializeField] private AudioMixer audioMixer;
 
         [EnumeratedArray(typeof(GameColor))] public Color[] gameColor;
 
@@ -195,6 +199,12 @@ namespace Game.Main
                 Console.EnqueueCommandNoHistory($"server.port {serverPort}");
             }
 
+            string sqpPort = ArgumentForOption(commandLineArgs, "-query_port");
+            if (sqpPort != null)
+            {
+                Console.EnqueueCommandNoHistory($"server.sqp_port {sqpPort}");
+            }
+
             Console.EnqueueCommandNoHistory($"exec -s {UserConfigFileName}");
 
             Application.targetFrameRate = -1;
@@ -216,6 +226,16 @@ namespace Game.Main
 
             if (!commandLineArgs.Contains("-noboot"))
                 Console.EnqueueCommandNoHistory($"exec -s {BootConfigFileName}");
+
+            if (_isHeadless)
+            {
+                _soundSystem = new SoundSystemNull();
+            }
+            else
+            {
+                _soundSystem = new SoundSystem();
+                _soundSystem.Init(audioMixer);
+            }
         }
 
         private static string ArgumentForOption(string[] args, string option)
