@@ -110,5 +110,10 @@ namespace Core
         {
             Debug.LogFormat("[frame: {0}] {1}", Time.frameCount, message);
         }
+
+        public static void LogWarning(string message)
+        {
+            Debug.LogWarningFormat("[frame: {0}] {1}", Time.frameCount, message);
+        }
     }
 }

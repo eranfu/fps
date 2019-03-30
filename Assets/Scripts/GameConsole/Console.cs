@@ -37,6 +37,7 @@ namespace GameConsole
         private static readonly string[] History = new string[HistoryCount];
         private static int HistoryNextIndex = 0;
         private static int HistoryIndex = 0;
+        public static int pendingCommandsWaitForFrames;
 
         public static void Init(IConsoleUi consoleUi)
         {

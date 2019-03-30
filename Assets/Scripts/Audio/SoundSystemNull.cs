@@ -7,5 +7,14 @@ namespace Audio
         public void Init(AudioMixer audioMixer)
         {
         }
+
+        public void MountBank(SoundBank bank)
+        {
+        }
+
+        public SoundHandle Play(SoundDef soundDef)
+        {
+            return default;
+        }
     }
 }

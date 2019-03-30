@@ -3,10 +3,14 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using Audio;
+using Boo.Lang;
 using Build;
 using Core;
 using Game.Core;
+using Game.Frontend;
+using Game.Systems;
 using GameConsole;
+using Networking.SQP;
 using Unity.Mathematics;
 using UnityEngine;
 using UnityEngine.Audio;
@@ -108,16 +112,28 @@ namespace Game.Main
             flags = ConfigVar.Flags.ServerInfo)]
         private static ConfigVar _serverTickRate;
 
+        private readonly List<string[]> _requestedGameLoopArguments = new List<string[]>();
+        private readonly List<Type> _requestedGameLoopTypes = new List<Type>();
+
+        private ClientFrontend _clientFrontend;
+
         private Stopwatch _clock;
+        private GameConfiguration _config;
         private DebugOverlay _debugOverlay;
+        private InputSystem _inputSystem;
         private bool _isHeadless;
+        private LevelManager _levelManager;
+
         private ISoundSystem _soundSystem;
+        private SQPClient _sqpClient;
         private long _stopWatchFrequency;
         [SerializeField] private AudioMixer audioMixer;
+        [SerializeField] private SoundBank defaultBank;
 
         [EnumeratedArray(typeof(GameColor))] public Color[] gameColor;
 
         public WeakAssetReference movableBoxPrototype;
+        public static ISoundSystem SoundSystem => game._soundSystem;
 
         public string BuildId { get; private set; }
 
@@ -235,7 +251,82 @@ namespace Game.Main
             {
                 _soundSystem = new SoundSystem();
                 _soundSystem.Init(audioMixer);
+                _soundSystem.MountBank(defaultBank);
+
+                GameObject go = Instantiate(Resources.Load<GameObject>("Prefabs/ClientFrontend"));
+                DontDestroyOnLoad(go);
+                _clientFrontend = go.GetComponentInChildren<ClientFrontend>();
             }
+
+            _sqpClient = new SQPClient();
+
+            GameDebug.Log("FPS initialized");
+#if UNITY_EDITOR
+            GameDebug.Log("Build type: editor");
+#elif DEVELOPMENT_BUILD
+            GameDebug.Log("Build type: development");
+#else
+            GameDebug.Log("Build type: release");
+#endif
+            GameDebug.Log($"Build id: {BuildId}");
+            GameDebug.Log($"Cwd: {Directory.GetCurrentDirectory()}");
+
+            SimpleBundleManager.Init();
+            GameDebug.Log("SimpleBundleManager initialized");
+
+            _levelManager = new LevelManager();
+            _levelManager.Init();
+            GameDebug.Log("LevelManager initialized");
+
+            _inputSystem = new InputSystem();
+            GameDebug.Log("InputSystem initialized");
+
+            _config = Instantiate((GameConfiguration) Resources.Load("GameConfiguration"));
+            GameDebug.Log("Loaded game config");
+
+            // Game loops
+            Console.AddCommand("preview", CmdPreview, "Start preview mode");
+            Console.AddCommand("serve", CmdServe, "Start server listening");
+            Console.AddCommand("client", CmdClient, "client: Enter client mode.");
+            Console.AddCommand("thinclient", CmdThinClient, "client: Enter thin client mode.");
+            Console.AddCommand("boot", CmdBoot, "Go back to boot loop.");
+        }
+
+        private void CmdBoot(string[] args)
+        {
+            _clientFrontend.ShowMenu(ClientFrontend.MenuShowing.None);
+        }
+
+        private void CmdThinClient(string[] args)
+        {
+            RequestGameLoop(typeof(ThinClientGameLoop), args);
+            Console.pendingCommandsWaitForFrames = 1;
+        }
+
+        private void CmdClient(string[] args)
+        {
+            RequestGameLoop(typeof(ClientGameLoop), args);
+            Console.pendingCommandsWaitForFrames = 1;
+        }
+
+        private void CmdServe(string[] args)
+        {
+            RequestGameLoop(typeof(ServerGameLoop), args);
+            Console.pendingCommandsWaitForFrames = 1;
+        }
+
+        private void CmdPreview(string[] args)
+        {
+            RequestGameLoop(typeof(PreviewGameLoop), args);
+            Console.pendingCommandsWaitForFrames = 1;
+        }
+
+        private void RequestGameLoop(Type loopType, string[] args)
+        {
+            Debug.Assert(typeof(IGameLoop).IsAssignableFrom(loopType));
+            _requestedGameLoopTypes.Add(loopType);
+            _requestedGameLoopArguments.Add(args);
+            GameDebug.Log($"Game loop {loopType} requested");
         }
 
         private static string ArgumentForOption(string[] args, string option)
