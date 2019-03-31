@@ -1,11 +1,11 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using Audio;
 using Boo.Lang;
 using Build;
-using Core;
 using Game.Core;
 using Game.Frontend;
 using Game.Systems;
@@ -14,6 +14,7 @@ using Networking.SQP;
 using Unity.Mathematics;
 using UnityEngine;
 using UnityEngine.Audio;
+using Utils;
 using Utils.DebugOverlay;
 using Utils.EnumeratedArray;
 using Utils.WeakAssetReference;
@@ -112,6 +113,7 @@ namespace Game.Main
             flags = ConfigVar.Flags.ServerInfo)]
         private static ConfigVar _serverTickRate;
 
+        private readonly List<IGameLoop> _gameLoops = new List<IGameLoop>();
         private readonly List<string[]> _requestedGameLoopArguments = new List<string[]>();
         private readonly List<Type> _requestedGameLoopTypes = new List<Type>();
 
@@ -290,11 +292,111 @@ namespace Game.Main
             Console.AddCommand("client", CmdClient, "client: Enter client mode.");
             Console.AddCommand("thinclient", CmdThinClient, "client: Enter thin client mode.");
             Console.AddCommand("boot", CmdBoot, "Go back to boot loop.");
+            Console.AddCommand("connect", CmdConnect, "connect <ip>: Connect to server on ip (default: localhost)");
+
+            Console.AddCommand("menu", CmdMenu, "Show the main menu.");
+            Console.AddCommand("load", CmdLoad, "LoadLevel.");
+        }
+
+        private void CmdLoad(string[] args)
+        {
+            LoadLevel(args[0]);
+            Console.SetOpen(false);
+        }
+
+        private void LoadLevel(string levelName)
+        {
+            if (!_levelManager.CanLoadLevel(levelName))
+            {
+                GameDebug.LogError($"Cannot load level: {levelName}");
+                return;
+            }
+        }
+
+        private void CmdMenu(string[] args)
+        {
+            var fadeDuration = 0.0f;
+            var show = ClientFrontend.MenuShowing.Main;
+            if (args.Length >= 1)
+            {
+                if (args[0] == "0")
+                    show = ClientFrontend.MenuShowing.None;
+                else if (args[0] == "2")
+                    show = ClientFrontend.MenuShowing.InGame;
+            }
+
+            if (args.Length >= 2)
+            {
+                float.TryParse(
+                    args[1], NumberStyles.Float, CultureInfo.InvariantCulture.NumberFormat, out fadeDuration);
+            }
+
+            _clientFrontend.ShowMenu(show, fadeDuration);
+            Console.SetOpen(false);
+        }
+
+        private void CmdConnect(string[] args)
+        {
+            if (_gameLoops.Count == 0)
+            {
+                RequestGameLoop(typeof(ClientGameLoop), args);
+                Console.pendingCommandsWaitForFrames = 1;
+                return;
+            }
+
+            var clientGameLoop = GetGameLoop<ClientGameLoop>();
+            if (clientGameLoop != null)
+            {
+                clientGameLoop.CmdConnect(args);
+                return;
+            }
+
+            var thinClientGameLoop = GetGameLoop<ThinClientGameLoop>();
+            if (thinClientGameLoop != null)
+            {
+                thinClientGameLoop.CmdConnect(args);
+                return;
+            }
+
+            GameDebug.Log("Cannot connect from current game mode.");
+        }
+
+        private static T GetGameLoop<T>() where T : class
+        {
+            if (game == null)
+            {
+                return null;
+            }
+
+            for (var i = 0; i < game._gameLoops.Count; i++)
+            {
+                if (game._gameLoops[i] is T result)
+                {
+                    return result;
+                }
+            }
+
+            return null;
         }
 
         private void CmdBoot(string[] args)
         {
             _clientFrontend.ShowMenu(ClientFrontend.MenuShowing.None);
+            _levelManager.UnloadLevel();
+            ShutdownGameLoops();
+            Console.pendingCommandsWaitForFrames = 1;
+            Console.SetOpen(true);
+        }
+
+        private void ShutdownGameLoops()
+        {
+            for (var i = 0; i < _gameLoops.Count; i++)
+            {
+                IGameLoop gameLoop = _gameLoops[i];
+                gameLoop.Shutdown();
+            }
+
+            _gameLoops.Clear();
         }
 
         private void CmdThinClient(string[] args)

@@ -29,5 +29,19 @@ namespace Audio
         public SoundMixerGroup soundGroup;
         [Range(-1, 1)] public float panMin = 0;
         [Range(-1, 1)] public float panMax = 0;
+
+        private void OnValidate()
+        {
+            if (repeatMin > repeatMax)
+                repeatMax = repeatMin;
+            if (pitchMin > pitchMax)
+                pitchMax = pitchMin;
+            if (distMin > distMax)
+                distMax = distMin;
+            if (delayMin > delayMax)
+                delayMax = delayMin;
+            if (panMin > panMax)
+                panMax = panMin;
+        }
     }
 }

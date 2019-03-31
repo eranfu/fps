@@ -4,7 +4,7 @@ using System.IO;
 using System.Threading;
 using UnityEngine;
 
-namespace Core
+namespace Utils
 {
     //
     // Logging of messages
@@ -114,6 +114,11 @@ namespace Core
         public static void LogWarning(string message)
         {
             Debug.LogWarningFormat("[frame: {0}] {1}", Time.frameCount, message);
+        }
+
+        public static void LogError(string message)
+        {
+            Debug.LogErrorFormat("[frame: {0}] {1}", Time.frameCount, message);
         }
     }
 }

@@ -1,9 +1,12 @@
 ﻿using System;
+using Utils;
 
 namespace Game.Main
 {
     public class ThinClientGameLoop : Game.IGameLoop
     {
+        private string _targetServer = "";
+
         public bool Init(string[] args)
         {
             throw new NotImplementedException();
@@ -27,6 +30,12 @@ namespace Game.Main
         public void LateUpdate()
         {
             throw new NotImplementedException();
+        }
+
+        public void CmdConnect(string[] args)
+        {
+            _targetServer = args.Length > 0 ? args[0] : "127.0.0.1";
+            GameDebug.Log($"Will connect to: {_targetServer}");
         }
     }
 }
