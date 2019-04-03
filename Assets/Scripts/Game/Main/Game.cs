@@ -14,12 +14,13 @@ using Networking.SQP;
 using Unity.Mathematics;
 using UnityEngine;
 using UnityEngine.Audio;
+using UnityEngine.Rendering.PostProcessing;
 using Utils;
-using Utils.DebugOverlay;
 using Utils.EnumeratedArray;
 using Utils.WeakAssetReference;
 using Console = GameConsole.Console;
 using Debug = UnityEngine.Debug;
+using DebugOverlay = Utils.DebugOverlay.DebugOverlay;
 using RenderSettings = Render.RenderSettings;
 
 namespace Game.Main
@@ -113,6 +114,7 @@ namespace Game.Main
             flags = ConfigVar.Flags.ServerInfo)]
         private static ConfigVar _serverTickRate;
 
+        private readonly List<Camera> _cameraStack = new List<Camera>();
         private readonly List<IGameLoop> _gameLoops = new List<IGameLoop>();
         private readonly List<string[]> _requestedGameLoopArguments = new List<string[]>();
         private readonly List<Type> _requestedGameLoopTypes = new List<Type>();
@@ -122,6 +124,7 @@ namespace Game.Main
         private Stopwatch _clock;
         private GameConfiguration _config;
         private DebugOverlay _debugOverlay;
+        private AutoExposure _exposure;
         private InputSystem _inputSystem;
         private bool _isHeadless;
         private LevelManager _levelManager;
@@ -311,6 +314,8 @@ namespace Game.Main
                 GameDebug.LogError($"Cannot load level: {levelName}");
                 return;
             }
+
+            _levelManager.LoadLevel(levelName);
         }
 
         private void CmdMenu(string[] args)
@@ -437,6 +442,20 @@ namespace Game.Main
             if (idx < 0)
                 return null;
             return idx < args.Length - 1 ? args[idx + 1] : "";
+        }
+
+        public Camera TopCamera()
+        {
+            int count = _cameraStack.Count;
+            return count == 0 ? null : _cameraStack[count - 1];
+        }
+
+        public void BlackFade(bool enabled)
+        {
+            if (_exposure != null)
+            {
+                _exposure.active = enabled;
+            }
         }
 
         public static class Input
