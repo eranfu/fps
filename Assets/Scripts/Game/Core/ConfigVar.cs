@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.IO;
 using System.Reflection;
 using System.Text.RegularExpressions;
 using UnityEngine;
+using Utils;
 
 namespace Game.Core
 {
@@ -74,7 +76,7 @@ namespace Game.Core
                     if (!type.IsClass)
                         continue;
                     foreach (FieldInfo fieldInfo in type.GetFields(BindingFlags.Instance | BindingFlags.Static |
-                                                             BindingFlags.Public | BindingFlags.NonPublic))
+                                                                   BindingFlags.Public | BindingFlags.NonPublic))
                     {
                         if (!fieldInfo.IsDefined(typeof(ConfigVarAttribute), false))
                             continue;
@@ -129,6 +131,24 @@ namespace Game.Core
             }
 
             ConfigVars.Add(var._name, var);
+        }
+
+        public static void Save(string filename)
+        {
+            using (StreamWriter file = File.CreateText(filename))
+            {
+                foreach (ConfigVar configVar in ConfigVars.Values)
+                {
+                    if ((configVar._flags & Flags.Save) == Flags.Save)
+                    {
+                        file.WriteLine($"{configVar._name} \"{configVar.Value}\"");
+                    }
+                }
+
+                dirtyFlags &= ~Flags.Save;
+            }
+
+            GameDebug.Log($"saved: {filename}");
         }
 
         [Flags]

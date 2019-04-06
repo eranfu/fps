@@ -85,5 +85,10 @@ namespace Render
             Console.Write(
                 $"Current screen resolution: {Screen.currentResolution.width}x{Screen.currentResolution.height}@{Screen.currentResolution.refreshRate}");
         }
+
+        public static void UpdateCameraSettings(Camera cam)
+        {
+            UpdateAAFlags(cam);
+        }
     }
 }

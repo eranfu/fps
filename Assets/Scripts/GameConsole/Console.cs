@@ -45,7 +45,7 @@ namespace GameConsole
 
             _consoleUi = consoleUi;
             _consoleUi.Init();
-            AddCommand("help", CmdHelp, "Show available commands");
+            AddCommand("help", CmdHelp, "help <command>: Show available commands");
             AddCommand("vars", CmdVars, "Show available variables");
             AddCommand("wait", CmdWait, "Wait for next frame or level");
             AddCommand("waitload", CmdWaitLoad, "Wait for level load");
@@ -107,25 +107,31 @@ namespace GameConsole
         {
             OutputString($"ProcessCommandLineArguments: {string.Join(" ", arguments)}");
             var commands = Pools.SimpleObject.Pop<List<string>>();
-            foreach (string argument in arguments)
+            for (var i = 0; i < arguments.Length; i++)
             {
+                string argument = arguments[i];
                 bool newCommandStarting = argument.StartsWith("+") || argument.StartsWith("-");
-
-                // skip leading arguments before we have seen '+' or '-'
-                if (commands.Count == 0 && !newCommandStarting) continue;
-
+                
                 if (newCommandStarting)
                 {
-                    commands.Add(argument);
+                    commands.Add(argument.Substring(1));
                 }
                 else
                 {
-                    string command = $"{commands[commands.Count - 1]} {argument}";
-                    commands[commands.Count - 1] = command;
+                    int count = commands.Count;
+                    if (count > 0)
+                    {
+                        string command = $"{commands[count - 1]} {argument}";
+                        commands[count - 1] = command;
+                    }
                 }
             }
 
-            foreach (string command in commands) EnqueueCommandNoHistory(command.Substring(1));
+            for (var i = 0; i < commands.Count; i++)
+            {
+                string command = commands[i];
+                EnqueueCommandNoHistory(command);
+            }
         }
 
         public static void EnqueueCommandNoHistory(string command)
@@ -161,7 +167,7 @@ namespace GameConsole
         private static void CmdExec(string[] args)
         {
             var silent = false;
-            var fileName = "";
+            string fileName;
             if (args.Length == 1)
             {
                 fileName = args[0];
@@ -213,7 +219,23 @@ namespace GameConsole
 
         private static void CmdHelp(string[] args)
         {
-            throw new NotImplementedException();
+            if (args.Length == 0)
+            {
+                OutputString("Available commands:");
+                foreach (ConsoleCommand command in Commands.Values)
+                {
+                    OutputString($"{command.name}: {command.description}");
+                }
+            }
+            else
+            {
+                foreach (string command in args)
+                {
+                    OutputString(Commands.TryGetValue(command, out ConsoleCommand cmd)
+                        ? $"{command}: {cmd.description}"
+                        : $"{command}: [There is no such command.]");
+                }
+            }
         }
 
         private class ConsoleCommand

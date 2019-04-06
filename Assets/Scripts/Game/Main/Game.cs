@@ -12,6 +12,7 @@ using Game.Systems;
 using GameConsole;
 using Networking.SQP;
 using Unity.Mathematics;
+using UnityEditor;
 using UnityEngine;
 using UnityEngine.Audio;
 using UnityEngine.Rendering.PostProcessing;
@@ -133,6 +134,7 @@ namespace Game.Main
         private SQPClient _sqpClient;
         private long _stopWatchFrequency;
         [SerializeField] private AudioMixer audioMixer;
+        [SerializeField] private Camera bootCamera;
         [SerializeField] private SoundBank defaultBank;
 
         [EnumeratedArray(typeof(GameColor))] public Color[] gameColor;
@@ -299,6 +301,130 @@ namespace Game.Main
 
             Console.AddCommand("menu", CmdMenu, "Show the main menu.");
             Console.AddCommand("load", CmdLoad, "LoadLevel.");
+            Console.AddCommand("quit", CmdQuit, "Quits.");
+            Console.AddCommand("screenshot", CmdScreenshot,
+                "screenshot <folder or file>: Capture screenshot. (default: current dir)");
+            Console.AddCommand("crashme", args => throw new ApplicationException(), "Crashes the game next frame");
+            Console.AddCommand("saveconfig", CmdSaveConfig, "Save the user config variables");
+            Console.AddCommand("loadconfig", CmdLoadConfig, "Load the user config variables");
+
+#if UNITY_STANDALONE_WIN
+            Console.AddCommand("windowpos", CmdWindowPos, "windowpos [x,y], Set position of window.");
+#endif
+
+
+            Console.SetOpen(true);
+            Console.ProcessCommandLineArgument(commandLineArgs);
+
+            PushCamera(bootCamera);
+        }
+
+        private void PushCamera(Camera cam)
+        {
+            if (_cameraStack.Count > 0)
+            {
+                SetCameraEnable(_cameraStack[_cameraStack.Count - 1], false);
+            }
+            _cameraStack.Add(cam);
+        }
+
+        private void SetCameraEnable(Camera cam, bool enabled)
+        {
+            if (enabled)
+            {
+                RenderSettings.UpdateCameraSettings(cam);
+            }
+        }
+
+#if UNITY_STANDALONE_WIN
+        private void CmdWindowPos(string[] args)
+        {
+            if (args.Length != 1)
+            {
+                string[] pos = args[0].Split(',');
+                if (pos.Length == 2 && int.TryParse(pos[0], out int x) && int.TryParse(pos[1], out int y))
+                {
+                    WindowsUtil.SetWindowPosition(x, y);
+                    return;
+                }
+            }
+
+            Console.EnqueueCommandNoHistory("help windowpos");
+        }
+#endif
+
+        private void CmdLoadConfig(string[] args)
+        {
+            Console.EnqueueCommandNoHistory($"exec {UserConfigFileName}");
+        }
+
+        private void CmdSaveConfig(string[] args)
+        {
+            ConfigVar.Save(UserConfigFileName);
+        }
+
+        private void CmdScreenshot(string[] args)
+        {
+            string filename;
+            string root = Path.GetFullPath("");
+            if (args.Length == 0)
+            {
+                filename = FileUtils.FindNewFilename($"{root}/screenshot{{0}}.png");
+                if (filename == null)
+                {
+                    GameDebug.LogWarning("Can not find a file name to store screenshot.");
+                    return;
+                }
+            }
+            else if (args.Length == 1)
+            {
+                string filenameOrFolder = args[0];
+                if (filenameOrFolder.ToLower().EndsWith(".png"))
+                {
+                    if (!File.Exists(filenameOrFolder))
+                    {
+                        filename = filenameOrFolder;
+                    }
+                    else
+                    {
+                        GameDebug.LogWarning($"File {filenameOrFolder} already exists.");
+                        return;
+                    }
+                }
+                else
+                {
+                    if (!Directory.Exists(filenameOrFolder))
+                    {
+                        Directory.CreateDirectory(filenameOrFolder);
+                    }
+
+                    filename = FileUtils.FindNewFilename($"{filenameOrFolder}/screenshot{{0}}.png");
+
+                    if (filename == null)
+                    {
+                        GameDebug.LogWarning("Can not find a file name to store screenshot.");
+                        return;
+                    }
+                }
+            }
+            else
+            {
+                Console.EnqueueCommandNoHistory("help screenshot");
+                return;
+            }
+
+            GameDebug.Log($"Saving screenshot to {filename}");
+            Console.SetOpen(false);
+            ScreenCapture.CaptureScreenshot(filename);
+        }
+
+        private void CmdQuit(string[] args)
+        {
+#if UNITY_EDITOR
+            EditorApplication.isPlaying = false;
+#else
+            Application.Quit();
+#endif
         }
 
         private void CmdLoad(string[] args)

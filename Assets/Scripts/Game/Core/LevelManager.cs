@@ -26,7 +26,7 @@ namespace Game.Core
 
     public class LevelManager
     {
-        private Level currentLevel;
+        private Level _currentLevel;
         private static readonly string[] LayerNames = {"background", "gameplay"};
 
         public void Init()
@@ -35,20 +35,20 @@ namespace Game.Core
 
         public void UnloadLevel()
         {
-            if (currentLevel == null)
+            if (_currentLevel == null)
             {
                 return;
             }
 
-            if (currentLevel.state == LevelState.Loading)
+            if (_currentLevel.state == LevelState.Loading)
             {
                 throw new NotImplementedException("TODO: Implement unload during loading.");
             }
 
             SceneManager.LoadScene(1);
 
-            SimpleBundleManager.ReleaseLevelAssetBundle(currentLevel.name);
-            currentLevel = null;
+            SimpleBundleManager.ReleaseLevelAssetBundle(_currentLevel.name);
+            _currentLevel = null;
         }
 
         public bool CanLoadLevel(string levelName)
@@ -59,7 +59,7 @@ namespace Game.Core
 
         public bool LoadLevel(string levelName)
         {
-            if (currentLevel != null)
+            if (_currentLevel != null)
                 UnloadLevel();
             Main.Game.game.TopCamera().enabled = false;
             Main.Game.game.BlackFade(true);
@@ -95,16 +95,32 @@ namespace Game.Core
             }
 
             var newLevel = new Level {name = levelName};
-            currentLevel = newLevel;
-            currentLevel.layers.Add(new LevelLayer {loadOperation = mainLoadOperation});
+            _currentLevel = newLevel;
+            _currentLevel.layers.Add(new LevelLayer {loadOperation = mainLoadOperation});
 
             if (!useLayers)
                 return true;
 
             for (var i = 0; i < LayerNames.Length; i++)
             {
-                
+                string layerName = LayerNames[i];
+                string path = allScenePaths.Find(l => l.ToLower().EndsWith($"{layerName}.unity"));
+                if (path == null)
+                    continue;
+
+                GameDebug.Log($"+Loading {path}");
+                AsyncOperation loadSceneAsync = SceneManager.LoadSceneAsync(path, LoadSceneMode.Additive);
+                if (loadSceneAsync != null)
+                {
+                    _currentLevel.layers.Add(new LevelLayer {loadOperation = loadSceneAsync});
+                }
+                else
+                {
+                    GameDebug.LogWarning($"Unable to load level layer: {path}");
+                }
             }
+
+            return true;
         }
     }
 }
