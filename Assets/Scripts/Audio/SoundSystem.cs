@@ -84,6 +84,11 @@ namespace Audio
             return new SoundHandle(e);
         }
 
+        public void SetCurrentListener(AudioListener audioListener)
+        {
+            _currentListener = audioListener;
+        }
+
         private void StartEmitter(SoundEmitter emitter)
         {
             StartSource(emitter.source, emitter.soundDef);

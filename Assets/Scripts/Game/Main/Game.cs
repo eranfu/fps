@@ -126,6 +126,7 @@ namespace Game.Main
         private GameConfiguration _config;
         private DebugOverlay _debugOverlay;
         private AutoExposure _exposure;
+        private int _exposureReleaseCount;
         private InputSystem _inputSystem;
         private bool _isHeadless;
         private LevelManager _levelManager;
@@ -190,7 +191,7 @@ namespace Game.Main
             }
             else
             {
-                ConsoleGUI consoleUi = Instantiate(Resources.Load<ConsoleGUI>("Prefabs/ConsoleGui"));
+                ConsoleGUI consoleUi = Instantiate(Resources.Load<ConsoleGUI>("Prefabs/ConsoleGUI"));
                 DontDestroyOnLoad(consoleUi);
                 Console.Init(consoleUi);
 
@@ -312,7 +313,6 @@ namespace Game.Main
             Console.AddCommand("windowpos", CmdWindowPos, "windowpos [x,y], Set position of window.");
 #endif
 
-
             Console.SetOpen(true);
             Console.ProcessCommandLineArgument(commandLineArgs);
 
@@ -325,14 +325,25 @@ namespace Game.Main
             {
                 SetCameraEnable(_cameraStack[_cameraStack.Count - 1], false);
             }
+
             _cameraStack.Add(cam);
+            SetCameraEnable(cam, true);
+            _exposureReleaseCount = 10;
         }
 
-        private void SetCameraEnable(Camera cam, bool enabled)
+        private static void SetCameraEnable(Camera cam, bool enabled)
         {
             if (enabled)
             {
                 RenderSettings.UpdateCameraSettings(cam);
+            }
+
+            cam.enabled = enabled;
+            var audioListener = cam.GetComponent<AudioListener>();
+            if (audioListener != null)
+            {
+                audioListener.enabled = enabled;
+                SoundSystem?.SetCurrentListener(enabled ? audioListener : null);
             }
         }
 

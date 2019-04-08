@@ -1,4 +1,5 @@
-﻿using UnityEngine.Audio;
+﻿using UnityEngine;
+using UnityEngine.Audio;
 
 namespace Audio
 {
@@ -7,5 +8,6 @@ namespace Audio
         void Init(AudioMixer audioMixer);
         void MountBank(SoundBank bank);
         SoundHandle Play(SoundDef soundDef);
+        void SetCurrentListener(AudioListener audioListener);
     }
 }

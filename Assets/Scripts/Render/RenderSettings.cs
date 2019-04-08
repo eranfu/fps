@@ -1,12 +1,48 @@
-﻿using Game.Core;
-using GameConsole;
+﻿using System;
+using Game.Core;
 using UnityEngine;
+using UnityEngine.Experimental.Rendering.HDPipeline;
+using UnityEngine.Rendering.PostProcessing;
+using Utils;
+using Console = GameConsole.Console;
 
 namespace Render
 {
     public static class RenderSettings
     {
+        [ConfigVar(name = "r.resolution", defaultValue = "", description = "Resolution", flags = ConfigVar.Flags.Save)]
         private static ConfigVar _rResolution;
+
+        [ConfigVar(name = "r.aamode", defaultValue = "taa", description = "AA mode: off, fxaa, smaa, taa",
+            flags = ConfigVar.Flags.Save)]
+        private static ConfigVar _rAAMode;
+
+        [ConfigVar(name = "r.aaquality", defaultValue = "high", description = "AA quality: low, medium, high",
+            flags = ConfigVar.Flags.Save)]
+        private static ConfigVar _rAAQuality;
+
+        [ConfigVar(name = "r.sss", defaultValue = "1", description = "Enable subsurface scattering",
+            flags = ConfigVar.Flags.Save)]
+        private static ConfigVar _rSSS;
+
+        [ConfigVar(name = "r.motionblur", defaultValue = "1", description = "Enable motion blur",
+            flags = ConfigVar.Flags.Save)]
+        private static ConfigVar _rMotionBlur;
+
+        [ConfigVar(name = "r.ssao", defaultValue = "1", description = "Enable ssao", flags = ConfigVar.Flags.Save)]
+        private static ConfigVar _rSSAO;
+
+        [ConfigVar(name = "r.ssr", defaultValue = "1", description = "Enable screen space reflections",
+            flags = ConfigVar.Flags.Save)]
+        private static ConfigVar _rSSR;
+
+        [ConfigVar(name = "r.roughrefraction", defaultValue = "1", description = "Enable rough refraction",
+            flags = ConfigVar.Flags.Save)]
+        private static ConfigVar _rRoughRefraction;
+
+        [ConfigVar(name = "r.distortion", defaultValue = "1", description = "Enable distortion",
+            flags = ConfigVar.Flags.Save)]
+        private static ConfigVar _rDistortion;
 
         public static void Init()
         {
@@ -22,17 +58,17 @@ namespace Render
 
         private static void CmdSrpBatching(string[] args)
         {
-            throw new System.NotImplementedException();
+            throw new NotImplementedException();
         }
 
         private static void CmdMaxQueue(string[] args)
         {
-            throw new System.NotImplementedException();
+            throw new NotImplementedException();
         }
 
         private static void CmdQuality(string[] args)
         {
-            throw new System.NotImplementedException();
+            throw new NotImplementedException();
         }
 
         private static void CmdResolution(string[] args)
@@ -89,6 +125,76 @@ namespace Render
         public static void UpdateCameraSettings(Camera cam)
         {
             UpdateAAFlags(cam);
+            UpdateFrameSettings(cam);
+        }
+
+        private static void UpdateFrameSettings(Camera cam)
+        {
+            if (cam == null)
+                return;
+            var hdCam = cam.GetComponent<HDAdditionalCameraData>();
+            if (hdCam == null)
+                return;
+            FrameSettings frameSettings = hdCam.GetFrameSettings();
+            frameSettings.enableSubsurfaceScattering = _rSSS.IntValue > 0;
+            frameSettings.enableMotionVectors = _rMotionBlur.IntValue > 0;
+            frameSettings.enableObjectMotionVectors = _rMotionBlur.IntValue > 0;
+            frameSettings.enableSSAO = _rSSAO.IntValue > 0;
+            frameSettings.enableSSR = _rSSR.IntValue > 0;
+            frameSettings.enableRoughRefraction = _rRoughRefraction.IntValue > 0;
+            frameSettings.enableDistortion = _rDistortion.IntValue > 0;
+        }
+
+        private static void UpdateAAFlags(Camera cam)
+        {
+            if (cam == null)
+            {
+                return;
+            }
+
+            var postProcessLayer = cam.GetComponent<PostProcessLayer>();
+            if (postProcessLayer == null)
+                return;
+
+            switch (_rAAMode.Value)
+            {
+                case "off":
+                    postProcessLayer.antialiasingMode = PostProcessLayer.Antialiasing.None;
+                    break;
+                case "taa":
+                    postProcessLayer.antialiasingMode = PostProcessLayer.Antialiasing.TemporalAntialiasing;
+                    break;
+                case "fxaa":
+                    postProcessLayer.antialiasingMode = PostProcessLayer.Antialiasing.FastApproximateAntialiasing;
+                    break;
+                case "smaa":
+                {
+                    postProcessLayer.antialiasingMode = PostProcessLayer.Antialiasing.SubpixelMorphologicalAntialiasing;
+                    switch (_rAAQuality.Value)
+                    {
+                        case "low":
+                            postProcessLayer.subpixelMorphologicalAntialiasing.quality =
+                                SubpixelMorphologicalAntialiasing.Quality.Low;
+                            break;
+                        case "medium":
+                            postProcessLayer.subpixelMorphologicalAntialiasing.quality =
+                                SubpixelMorphologicalAntialiasing.Quality.Medium;
+                            break;
+                        case "high":
+                            postProcessLayer.subpixelMorphologicalAntialiasing.quality =
+                                SubpixelMorphologicalAntialiasing.Quality.High;
+                            break;
+                        default:
+                            GameDebug.LogWarning($"Unknown aa quality: {_rAAQuality.Value}");
+                            break;
+                    }
+
+                    break;
+                }
+                default:
+                    GameDebug.LogWarning($"Unknown aa mode: {_rAAMode.Value}");
+                    break;
+            }
         }
     }
 }

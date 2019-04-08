@@ -1,4 +1,5 @@
-﻿using UnityEngine.Audio;
+﻿using UnityEngine;
+using UnityEngine.Audio;
 
 namespace Audio
 {
@@ -15,6 +16,10 @@ namespace Audio
         public SoundHandle Play(SoundDef soundDef)
         {
             return default;
+        }
+
+        public void SetCurrentListener(AudioListener audioListener)
+        {
         }
     }
 }

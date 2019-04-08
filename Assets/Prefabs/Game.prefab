@@ -43,8 +43,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2d77b161b9bde4d41bcbf7ae30ab7252, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  audioMixer: {fileID: 24100000, guid: a704e2e1f5c8edd429792318bd1aad79, type: 2}
+  bootCamera: {fileID: 0}
+  defaultBank: {fileID: 0}
+  gameColor:
+  - {r: 0.11372549, g: 0.5372549, b: 0.8, a: 1}
+  - {r: 1, g: 0.24313726, b: 0.24313726, a: 1}
   movableBoxPrototype:
     guid: 
-  gameColor:
-  - {r: 0, g: 0, b: 0, a: 0}
-  - {r: 0, g: 0, b: 0, a: 0}
