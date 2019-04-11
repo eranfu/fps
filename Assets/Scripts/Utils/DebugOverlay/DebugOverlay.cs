@@ -18,7 +18,6 @@ namespace Utils.DebugOverlay
         private int width = 80;
 
         [SerializeField] private int height = 25;
-
         [SerializeField] private QuadBuffer quadBuffer;
         [SerializeField] private Line3DBuffer line3DBuffer;
         [SerializeField] private LineBuffer lineBuffer;

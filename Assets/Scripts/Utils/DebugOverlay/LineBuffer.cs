@@ -1,7 +1,9 @@
-﻿using UnityEngine;
+﻿using System;
+using UnityEngine;
 
 namespace Utils.DebugOverlay
 {
+    [Serializable]
     public class LineBuffer : BufferBase<LineInstanceData>
     {
         protected override int Stride => 16 + 16;
@@ -24,7 +26,7 @@ namespace Utils.DebugOverlay
                 height = Screen.height;
             }
 
-            material.SetVector(ShaderProperties.Scales,
+            Material.SetVector(ShaderProperties.Scales,
                 new Vector4(
                     1.0f / DebugOverlay.Width,
                     1.0f / DebugOverlay.Height,

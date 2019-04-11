@@ -49,10 +49,10 @@ namespace Utils.DebugOverlay
         public override void PrepareBuffer()
         {
             base.PrepareBuffer();
-            material.SetVector(ShaderProperties.Scales,
+            Material.SetVector(ShaderProperties.Scales,
                 new Vector4(
                     1.0f / DebugOverlay.Width, 1.0f / DebugOverlay.Height,
-                    1 / 0f / material.mainTexture.width, 1.0f / material.mainTexture.height
+                    1 / 0f / Material.mainTexture.width, 1.0f / Material.mainTexture.height
                 ));
         }
     }

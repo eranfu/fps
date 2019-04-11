@@ -1,6 +1,6 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
---- !u!1 &4171311797612922997
+--- !u!1 &3562955321849445586
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -8,22 +8,22 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 1917242910338282319}
-  - component: {fileID: 679431634529670064}
+  - component: {fileID: 3562955321849445585}
+  - component: {fileID: 8139572163420960484}
   m_Layer: 0
-  m_Name: Game
+  m_Name: DebugOverlay
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!4 &1917242910338282319
+--- !u!4 &3562955321849445585
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4171311797612922997}
+  m_GameObject: {fileID: 3562955321849445586}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
@@ -31,23 +31,27 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &679431634529670064
+--- !u!114 &8139572163420960484
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4171311797612922997}
+  m_GameObject: {fileID: 3562955321849445586}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 2d77b161b9bde4d41bcbf7ae30ab7252, type: 3}
+  m_Script: {fileID: 11500000, guid: 3800743de055fb64fb5cb23bb662e2d5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  audioMixer: {fileID: 24100000, guid: a704e2e1f5c8edd429792318bd1aad79, type: 2}
-  bootCamera: {fileID: 0}
-  defaultBank: {fileID: 11400000, guid: fd554d2766e015a41b66b64a51fa5dd7, type: 2}
-  gameColor:
-  - {r: 0.11372549, g: 0.5372549, b: 0.8, a: 1}
-  - {r: 1, g: 0.24313726, b: 0.24313726, a: 1}
-  movableBoxPrototype:
-    guid: 
+  width: 80
+  height: 25
+  quadBuffer:
+    material: {fileID: 2100000, guid: 826aa22052c4b4e46b4ee8d6f3d56fe8, type: 2}
+    charCols: 30
+    charRows: 16
+    cellWidth: 32
+    cellHeight: 32
+  line3DBuffer:
+    material: {fileID: 2100000, guid: c7e533f9633f7e349a7e40687a0ccc0b, type: 2}
+  lineBuffer:
+    material: {fileID: 2100000, guid: a42cd56fcab990a449d2f305515ea541, type: 2}

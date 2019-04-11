@@ -35,10 +35,10 @@ namespace Game.Entity
     public class GameWorld
     {
         [ConfigVar(
-            name = "gameObjectHierarchy",
+            name = "gameobjecthierarchy",
             description = "Should game object be organized in a game object hierarchy.",
             defaultValue = "0")]
-        private static ConfigVar gameObjectHierarchy;
+        private static ConfigVar _gameObjectHierarchy;
 
         public static readonly List<GameWorld> Worlds = new List<GameWorld>();
 
@@ -56,7 +56,7 @@ namespace Game.Entity
 
         public GameWorld(string name = "world")
         {
-            if (gameObjectHierarchy.IntValue == 1)
+            if (_gameObjectHierarchy.IntValue == 1)
             {
                 SceneRoot = new GameObject(name);
                 Object.DontDestroyOnLoad(SceneRoot);

@@ -1,7 +1,9 @@
-﻿using UnityEngine;
+﻿using System;
+using UnityEngine;
 
 namespace Utils.DebugOverlay
 {
+    [Serializable]
     public class Line3DBuffer : BufferBase<Line3DInstanceData>
     {
         protected override int Stride => 16 + 16 + 16;
