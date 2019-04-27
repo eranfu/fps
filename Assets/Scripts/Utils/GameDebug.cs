@@ -28,14 +28,17 @@ namespace Utils
 
         public static void Init(string logFilePath, string logBaseName)
         {
-            Application.logMessageReceived += Write;
+            Exception lastException = null;
+            if (!Directory.Exists(logFilePath))
+            {
+                Directory.CreateDirectory(logFilePath);
+            }
 
-            var filePath = "<none>";
             for (var i = 0; i < 10; i++)
             {
                 try
                 {
-                    filePath = $"{logFilePath}/{logBaseName}{(i == 0 ? "" : $"_{i}")}.log";
+                    string filePath = $"{logFilePath}/{logBaseName}{(i == 0 ? "" : $"_{i}")}.log";
                     StreamWriter logFile = File.CreateText(filePath);
                     logFile.AutoFlush = true;
                     _logQueue = new ConcurrentQueue<(string message, string stacktrace, LogType type)>();
@@ -81,15 +84,19 @@ namespace Utils
                         }
                     });
                     _writeFileThread.Start();
-                    break;
+
+                    Application.logMessageReceived += Write;
+                    GameDebug.Log($"GameDebug initialized. Logging to {filePath}");
+                    return;
                 }
-                catch
+                catch (Exception e)
                 {
-                    filePath = "<none>";
+                    lastException = e;
                 }
             }
 
-            Debug.Log($"GameDebug initialized. Logging to {filePath}");
+            if (lastException != null)
+                throw lastException;
         }
 
         public static void Shutdown()

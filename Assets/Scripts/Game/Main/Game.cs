@@ -209,7 +209,7 @@ namespace Game.Main
             }
 
             string logfileArg = ArgumentForOption(commandLineArgs, "-logfile");
-            string engineLogFileLocation = logfileArg != null ? Path.GetDirectoryName(logfileArg) : ".";
+            string engineLogFileLocation = logfileArg != null ? Path.GetDirectoryName(logfileArg) : "./GameLogs";
 
             string logName = _isHeadless ? $"game_{DateTime.UtcNow:yyyyMMdd_HHmmss_fff}" : "game";
             GameDebug.Init(engineLogFileLocation, logName);
@@ -317,6 +317,15 @@ namespace Game.Main
             Console.ProcessCommandLineArgument(commandLineArgs);
 
             PushCamera(bootCamera);
+        }
+
+        private void OnDestroy()
+        {
+            GameDebug.Shutdown();
+            Console.Shutdown();
+            if (_debugOverlay != null)
+                _debugOverlay.Shutdown();
+            game = null;
         }
 
         private void PushCamera(Camera cam)

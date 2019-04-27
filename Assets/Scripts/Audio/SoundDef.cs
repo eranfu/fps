@@ -30,6 +30,7 @@ namespace Audio
         [Range(-1, 1)] public float panMin = 0;
         [Range(-1, 1)] public float panMax = 0;
 
+#if UNITY_EDITOR
         private void OnValidate()
         {
             if (repeatMin > repeatMax)
@@ -43,5 +44,6 @@ namespace Audio
             if (panMin > panMax)
                 panMax = panMin;
         }
+#endif
     }
 }

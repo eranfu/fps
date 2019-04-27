@@ -55,13 +55,13 @@ namespace Audio
 
         public void MountBank(SoundBank bank)
         {
-            Debug.Assert(bank.soundDefGuidList.Count == bank.soundDefList.Count);
-            for (var i = 0; i < bank.soundDefGuidList.Count; i++)
+            Debug.Assert(bank.soundDefGuidList.Length == bank.soundDefList.Length);
+            for (var i = 0; i < bank.soundDefGuidList.Length; i++)
             {
                 _soundDefList[bank.soundDefGuidList[i]] = bank.soundDefList[i];
             }
 
-            GameDebug.Log($"Mounted sound bank: {bank.name} with {bank.soundDefGuidList.Count} sounds");
+            GameDebug.Log($"Mounted sound bank: {bank.name} with {bank.soundDefGuidList.Length} sounds");
         }
 
         public SoundHandle Play(SoundDef soundDef)

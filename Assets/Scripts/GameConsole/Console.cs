@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using Game.Core;
 using UnityEngine;
+using Utils;
 using Utils.DebugOverlay;
 using Utils.Pool;
 
@@ -136,7 +137,7 @@ namespace GameConsole
 
         public static void EnqueueCommandNoHistory(string command)
         {
-            Debug.Log($"cmd: {command}");
+            GameDebug.Log($"cmd: {command}");
             PendingCommands.Add(command);
         }
 

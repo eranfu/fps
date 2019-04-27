@@ -1,5 +1,4 @@
-﻿using Boo.Lang;
-using UnityEditor;
+﻿using UnityEditor;
 using UnityEngine;
 
 namespace Audio
@@ -7,17 +6,32 @@ namespace Audio
     [CreateAssetMenu(fileName = "SoundBank", menuName = "FPS/Audio/SoundBank", order = 10000)]
     public class SoundBank : ScriptableObject
     {
-        public List<SoundDef> soundDefList;
-        public List<string> soundDefGuidList;
+        public SoundDef[] soundDefList;
+        public string[] soundDefGuidList;
+
+        public SoundDef FindByName(string soundName)
+        {
+            for (var i = 0; i < soundDefList.Length; i++)
+            {
+                SoundDef soundDef = soundDefList[i];
+                if (soundDef.name == soundName)
+                {
+                    return soundDef;
+                }
+            }
+
+            return null;
+        }
 
 #if UNITY_EDITOR
         private void OnValidate()
         {
-            soundDefGuidList.Clear();
-            foreach (SoundDef soundDef in soundDefList)
+            soundDefGuidList = new string[soundDefList.Length];
+            for (var i = 0; i < soundDefList.Length; i++)
             {
+                SoundDef soundDef = soundDefList[i];
                 AssetDatabase.TryGetGUIDAndLocalFileIdentifier(soundDef, out string guid, out long _);
-                soundDefGuidList.Add(guid);
+                soundDefGuidList[i] = guid;
             }
         }
 #endif
