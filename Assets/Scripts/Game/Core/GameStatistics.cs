@@ -69,7 +69,7 @@ namespace Game.Core
 
         private void CmdShowProfilers(string[] args)
         {
-            var names = Pools.SimpleObject.Pop<List<string>>();
+            var names = SimpleObjectPool.Pop<List<string>>();
             Sampler.GetNames(names);
 
             string search = args.Length > 0 ? args[0].ToLower() : null;
@@ -78,7 +78,7 @@ namespace Game.Core
                     Console.Write(name);
 
             names.Clear();
-            Pools.SimpleObject.Push(names);
+            SimpleObjectPool.Push(names);
         }
 
         private void SnapTime()
@@ -101,7 +101,7 @@ namespace Game.Core
                 _ticksPerFrame[0][l] = 1000.0f * world.worldTime.SecondsPerTick * ticks;
                 _lastWorldTick = world.worldTime.Tick;
                 double lastTickTime = world.nextTickTime - world.worldTime.SecondsPerTick;
-                _ticksPerFrame[1][l] = (float) (1000.0 * (Main.Game.frameTime - lastTickTime));
+                _ticksPerFrame[1][l] = (float) (1000.0 * (Main.GameRoot.frameTime - lastTickTime));
             }
 
             // get timing & update average accumulators
@@ -190,7 +190,7 @@ namespace Game.Core
 
         private void DrawCompactStats()
         {
-            char[] buf = Pools.Buffer.Pop<char>(256);
+            char[] buf = BufferPool.Pop<char>(256);
             DebugOverlay.AddQuadAbsolute(0, 0, 60, 14, '\0', new Vector4(1.0f, 1.0f, 1.0f, 0.2f));
             int c = StringFormatter.Write(ref buf, 0, "FPS:{0}", Mathf.RoundToInt(1000.0f / _frameDurationMs));
             DebugOverlay.WriteAbsolute(2, 2, 8.0f, buf, c);
@@ -200,7 +200,7 @@ namespace Game.Core
                 ? StringFormatter.Write(ref buf, 0, "RTT:{0}", rtt)
                 : StringFormatter.Write(ref buf, 0, "RTT:---");
             DebugOverlay.WriteAbsolute(64, 2, 8.0f, buf, c);
-            Pools.Buffer.Push(buf);
+            BufferPool.Push(buf);
         }
 
         private class RecorderEntry

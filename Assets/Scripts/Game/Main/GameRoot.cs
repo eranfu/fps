@@ -95,7 +95,7 @@ namespace Game.Main
     }
 
     [DefaultExecutionOrder(-1000)]
-    public class Game : MonoBehaviour
+    public class GameRoot : MonoBehaviour
     {
         public delegate void UpdateDelegate();
 
@@ -109,7 +109,7 @@ namespace Game.Main
         private const string BootConfigFileName = "boot.cfg";
 
         public static double frameTime;
-        public static Game game;
+        public static GameRoot gameRoot;
 
         [ConfigVar(name = "server.tickrate", defaultValue = "60", description = "TickRate for server",
             flags = ConfigVar.Flags.ServerInfo)]
@@ -129,7 +129,6 @@ namespace Game.Main
         private int _exposureReleaseCount;
         private InputSystem _inputSystem;
         private bool _isHeadless;
-        private LevelManager _levelManager;
 
         private ISoundSystem _soundSystem;
         private SQPClient _sqpClient;
@@ -141,7 +140,8 @@ namespace Game.Main
         [EnumeratedArray(typeof(GameColor))] public Color[] gameColor;
 
         public WeakAssetReference movableBoxPrototype;
-        public static ISoundSystem SoundSystem => game._soundSystem;
+        public LevelManager LevelManager { get; private set; }
+        public static ISoundSystem SoundSystem => gameRoot._soundSystem;
 
         public string BuildId { get; private set; }
 
@@ -150,9 +150,9 @@ namespace Game.Main
 
         private void Awake()
         {
-            Debug.Assert(game == null);
+            Debug.Assert(gameRoot == null);
             DontDestroyOnLoad(gameObject);
-            game = this;
+            gameRoot = this;
 
             _stopWatchFrequency = Stopwatch.Frequency;
             _clock = new Stopwatch();
@@ -282,8 +282,8 @@ namespace Game.Main
             SimpleBundleManager.Init();
             GameDebug.Log("SimpleBundleManager initialized");
 
-            _levelManager = new LevelManager();
-            _levelManager.Init();
+            LevelManager = new LevelManager();
+            LevelManager.Init();
             GameDebug.Log("LevelManager initialized");
 
             _inputSystem = new InputSystem();
@@ -325,7 +325,7 @@ namespace Game.Main
             Console.Shutdown();
             if (_debugOverlay != null)
                 _debugOverlay.Shutdown();
-            game = null;
+            gameRoot = null;
         }
 
         private void PushCamera(Camera cam)
@@ -455,13 +455,13 @@ namespace Game.Main
 
         private void LoadLevel(string levelName)
         {
-            if (!_levelManager.CanLoadLevel(levelName))
+            if (!LevelManager.CanLoadLevel(levelName))
             {
                 GameDebug.LogError($"Cannot load level: {levelName}");
                 return;
             }
 
-            _levelManager.LoadLevel(levelName);
+            LevelManager.LoadLevel(levelName);
         }
 
         private void CmdMenu(string[] args)
@@ -514,14 +514,14 @@ namespace Game.Main
 
         private static T GetGameLoop<T>() where T : class
         {
-            if (game == null)
+            if (gameRoot == null)
             {
                 return null;
             }
 
-            for (var i = 0; i < game._gameLoops.Count; i++)
+            for (var i = 0; i < gameRoot._gameLoops.Count; i++)
             {
-                if (game._gameLoops[i] is T result)
+                if (gameRoot._gameLoops[i] is T result)
                 {
                     return result;
                 }
@@ -533,7 +533,7 @@ namespace Game.Main
         private void CmdBoot(string[] args)
         {
             _clientFrontend.ShowMenu(ClientFrontend.MenuShowing.None);
-            _levelManager.UnloadLevel();
+            LevelManager.UnloadLevel();
             ShutdownGameLoops();
             Console.pendingCommandsWaitForFrames = 1;
             Console.SetOpen(true);

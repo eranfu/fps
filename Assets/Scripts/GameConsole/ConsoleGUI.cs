@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using Game.Main;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -8,18 +9,18 @@ namespace GameConsole
     public class ConsoleGUI : MonoBehaviour, IConsoleUi
     {
         private readonly List<string> _lines = new List<string>();
+        [SerializeField] private Transform panel;
         [SerializeField] private Text buildIdText;
         [SerializeField] private InputField inputField;
         [SerializeField] private Text textArea;
 
         public void Init()
         {
-            buildIdText.text = $"{Game.Main.Game.game.BuildId} ({Application.unityVersion})";
+            buildIdText.text = $"{GameRoot.gameRoot.BuildId} ({Application.unityVersion})";
         }
 
         public void Shutdown()
         {
-            throw new NotImplementedException();
         }
 
         public void OutputString(string message)
@@ -27,7 +28,7 @@ namespace GameConsole
             _lines.Add(message);
             int count = Mathf.Min(100, _lines.Count);
             int start = _lines.Count - count;
-            textArea.text = string.Join("\n", _lines.GetRange(start, count));
+            textArea.text = string.Join("\n", _lines.GetRange(start, count).ToArray());
         }
 
         public bool IsOpen()
@@ -37,7 +38,12 @@ namespace GameConsole
 
         public void SetOpen(bool open)
         {
-            throw new NotImplementedException();
+            GameRoot.Input.SetBlock(GameRoot.Input.Blocker.Console, open);
+            panel.gameObject.SetActive(open);
+            if (open)
+            {
+                inputField.ActivateInputField();
+            }
         }
 
         public void ConsoleUpdate()

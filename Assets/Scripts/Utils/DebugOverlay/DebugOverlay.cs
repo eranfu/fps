@@ -155,14 +155,14 @@ namespace Utils.DebugOverlay
         {
             if (_instance == null)
                 return;
-            float[][] dataSet = Pools.Buffer.Pop<float[]>(1);
-            Color[] colors = Pools.Buffer.Pop<Color>(1);
+            float[][] dataSet = BufferPool.Pop<float[]>(1);
+            Color[] colors = BufferPool.Pop<Color>(1);
             dataSet[0] = data;
             colors[0] = color;
             DrawHistogram(x, y, width, height, dataSet, startSample, colors, maxRange);
             dataSet[0] = null;
-            Pools.Buffer.Push(colors);
-            Pools.Buffer.Push(dataSet);
+            BufferPool.Push(colors);
+            BufferPool.Push(dataSet);
         }
 
         public static void DrawHistogram(float x, float y, float width, float height, float[][] data, int startSample,
@@ -229,14 +229,14 @@ namespace Utils.DebugOverlay
         {
             if (_instance == null)
                 return;
-            float[][] dataSet = Pools.Buffer.Pop<float[]>(1);
-            Color[] colors = Pools.Buffer.Pop<Color>(1);
+            float[][] dataSet = BufferPool.Pop<float[]>(1);
+            Color[] colors = BufferPool.Pop<Color>(1);
             dataSet[0] = data;
             colors[0] = color;
             DrawGraph(x, y, w, h, dataSet, startSample, colors, maxRange);
             dataSet[0] = null;
-            Pools.Buffer.Push(dataSet);
-            Pools.Buffer.Push(colors);
+            BufferPool.Push(dataSet);
+            BufferPool.Push(colors);
         }
 
         public static void DrawGraph(

@@ -24,7 +24,7 @@ namespace Game.Frontend
                 return;
             _menuShowing = show;
             _menuFader.MoveTo(show != MenuShowing.None ? 1.0f : 0.0f, fadeDuration);
-            Main.Game.SoundSystem.Play(_menuShowing != MenuShowing.None ? uiSelectLightSound : uiCloseSound);
+            Main.GameRoot.SoundSystem.Play(_menuShowing != MenuShowing.None ? uiSelectLightSound : uiCloseSound);
         }
     }
 }

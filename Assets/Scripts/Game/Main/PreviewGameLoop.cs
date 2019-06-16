@@ -1,6 +1,6 @@
 ﻿namespace Game.Main
 {
-    public class PreviewGameLoop : Game.IGameLoop
+    public class PreviewGameLoop : GameRoot.IGameLoop
     {
         public bool Init(string[] args)
         {

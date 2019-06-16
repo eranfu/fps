@@ -769,10 +769,10 @@ namespace Networking
                 }
                 else
                 {
-                    char[] chars = Pools.Buffer.Pop<char>(1024 * 32);
+                    char[] chars = BufferPool.Pop<char>(1024 * 32);
                     int charLength = NetworkConfig.Encoding.GetChars(valueBuffer, valueOffset, valueLength, chars, 0);
                     _value = new string(chars, 0, charLength);
-                    Pools.Buffer.Push(chars);
+                    BufferPool.Push(chars);
                 }
             }
 

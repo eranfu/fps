@@ -69,7 +69,7 @@ namespace GameConsole
             if (_consoleShowLastLine?.IntValue > 0)
             {
                 _lastMessage = message;
-                _timeLastMessage = Game.Main.Game.frameTime;
+                _timeLastMessage = Game.Main.GameRoot.frameTime;
             }
 
             OutputString(message);
@@ -94,25 +94,29 @@ namespace GameConsole
 
         public static void RemoveCommandsWithTag(int tag)
         {
-            var removeList = Pools.SimpleObject.Pop<List<string>>();
+            var removeList = SimpleObjectPool.Pop<List<string>>();
             foreach (ConsoleCommand command in Commands.Values)
                 if (command.tag == tag)
                     removeList.Add(command.name);
 
-            foreach (string name in removeList) RemoveCommand(name);
+            foreach (string name in removeList)
+                RemoveCommand(name);
 
-            Pools.SimpleObject.Push(removeList);
+            removeList.Clear();
+            SimpleObjectPool.Push(removeList);
         }
 
         public static void ProcessCommandLineArgument(string[] arguments)
         {
             OutputString($"ProcessCommandLineArguments: {string.Join(" ", arguments)}");
-            var commands = Pools.SimpleObject.Pop<List<string>>();
+            var commands = SimpleObjectPool.Pop<List<string>>();
             for (var i = 0; i < arguments.Length; i++)
             {
                 string argument = arguments[i];
+
+                // '+' means new command, and '-' means optional argument
                 bool newCommandStarting = argument.StartsWith("+") || argument.StartsWith("-");
-                
+
                 if (newCommandStarting)
                 {
                     commands.Add(argument.Substring(1));
@@ -131,8 +135,12 @@ namespace GameConsole
             for (var i = 0; i < commands.Count; i++)
             {
                 string command = commands[i];
-                EnqueueCommandNoHistory(command);
+                if (command.StartsWith("+"))
+                    EnqueueCommandNoHistory(command);
             }
+
+            commands.Clear();
+            SimpleObjectPool.Push(commands);
         }
 
         public static void EnqueueCommandNoHistory(string command)
@@ -161,7 +169,7 @@ namespace GameConsole
 
         public static void ConsoleUpdate()
         {
-            double lastMessageTime = Game.Main.Game.frameTime - _timeLastMessage;
+            double lastMessageTime = Game.Main.GameRoot.frameTime - _timeLastMessage;
             if (lastMessageTime < 1) DebugOverlay.WriteString(0, 0, _lastMessage);
         }
 
@@ -237,6 +245,32 @@ namespace GameConsole
                         : $"{command}: [There is no such command.]");
                 }
             }
+        }
+
+        public static void WriteLog(string message, string stacktrace, LogType type)
+        {
+            switch (type)
+            {
+                case LogType.Error:
+                    message = $"[Error] {message}";
+                    break;
+                case LogType.Assert:
+                    message = $"[Assert] {message}";
+                    break;
+                case LogType.Warning:
+                    message = $"[Warning] {message}";
+                    break;
+                case LogType.Log:
+                    message = $"[Log] {message}";
+                    break;
+                case LogType.Exception:
+                    message = $"[Exception] {message}";
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
+
+            Write(message);
         }
 
         private class ConsoleCommand

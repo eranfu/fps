@@ -2,7 +2,7 @@
 
 namespace Game.Main
 {
-    public class ClientGameLoop : Game.IGameLoop
+    public class ClientGameLoop : GameRoot.IGameLoop
     {
         private enum ClientState
         {

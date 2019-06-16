@@ -75,7 +75,7 @@ namespace Game.Entity
             Debug.Assert(_entityManager.IsCreated);
 
             worldTime.TicksPerSecond = 60;
-            nextTickTime = Main.Game.frameTime;
+            nextTickTime = GameRoot.frameTime;
 
             Worlds.Add(this);
 

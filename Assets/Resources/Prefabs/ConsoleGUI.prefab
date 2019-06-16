@@ -568,6 +568,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b942d38a1049b764699ea610964e0b1d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  panel: {fileID: 1090948615993520026}
   buildIdText: {fileID: 3052977491939756661}
   inputField: {fileID: 2935974452733479599}
   textArea: {fileID: 5880612612822706156}

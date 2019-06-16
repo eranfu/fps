@@ -26,6 +26,9 @@ namespace Audio
 #if UNITY_EDITOR
         private void OnValidate()
         {
+            if (soundDefList == null)
+                return;
+
             soundDefGuidList = new string[soundDefList.Length];
             for (var i = 0; i < soundDefList.Length; i++)
             {

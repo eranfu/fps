@@ -48,7 +48,7 @@ namespace GameConsole
         {
             System.Console.CursorLeft = 0;
             System.Console.CursorTop = System.Console.BufferHeight - 1;
-            System.Console.BackgroundColor = System.ConsoleColor.Blue;
+            System.Console.BackgroundColor = ConsoleColor.Blue;
             System.Console.Write(
                 $"{_currentLine}{new string(' ', System.Console.BufferWidth - _currentLine.Length - 1)}");
             System.Console.CursorLeft = _currentLine.Length;

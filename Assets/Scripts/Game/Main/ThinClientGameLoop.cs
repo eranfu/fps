@@ -3,7 +3,7 @@ using Utils;
 
 namespace Game.Main
 {
-    public class ThinClientGameLoop : Game.IGameLoop
+    public class ThinClientGameLoop : GameRoot.IGameLoop
     {
         private string _targetServer = "";
 

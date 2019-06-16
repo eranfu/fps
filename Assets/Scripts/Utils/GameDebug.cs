@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.IO;
 using System.Threading;
 using UnityEngine;
+using Console = GameConsole.Console;
 
 namespace Utils
 {
@@ -86,7 +87,7 @@ namespace Utils
                     _writeFileThread.Start();
 
                     Application.logMessageReceived += Write;
-                    GameDebug.Log($"GameDebug initialized. Logging to {filePath}");
+                    Log($"GameDebug initialized. Logging to {filePath}");
                     return;
                 }
                 catch (Exception e)
@@ -111,6 +112,7 @@ namespace Utils
         {
             _logQueue.Enqueue((message, stacktrace, type));
             _logEvent.Set();
+            Console.WriteLog(message, stacktrace, type);
         }
 
         public static void Log(string message)

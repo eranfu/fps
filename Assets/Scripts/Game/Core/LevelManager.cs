@@ -61,8 +61,8 @@ namespace Game.Core
         {
             if (_currentLevel != null)
                 UnloadLevel();
-            Main.Game.game.TopCamera().enabled = false;
-            Main.Game.game.BlackFade(true);
+            Main.GameRoot.gameRoot.TopCamera().enabled = false;
+            Main.GameRoot.gameRoot.BlackFade(true);
 
             AssetBundle bundle = SimpleBundleManager.LoadLevelAssetBundle(levelName);
             if (bundle == null)
@@ -121,6 +121,11 @@ namespace Game.Core
             }
 
             return true;
+        }
+
+        public bool IsLoadingLevel()
+        {
+            return _currentLevel != null && _currentLevel.state == LevelState.Loading;
         }
     }
 }
