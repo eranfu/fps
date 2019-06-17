@@ -1,6 +1,7 @@
 ﻿using System;
 using Game.Core;
 using UnityEngine;
+using UnityEngine.Experimental.Rendering;
 using UnityEngine.Experimental.Rendering.HDPipeline;
 using UnityEngine.Rendering.PostProcessing;
 using Utils;
@@ -44,6 +45,10 @@ namespace Render
             flags = ConfigVar.Flags.Save)]
         private static ConfigVar _rDistortion;
 
+        [ConfigVar(name = "r.latesync", defaultValue = "1", description = "Sync with render thread late",
+            flags = ConfigVar.Flags.None)]
+        private static ConfigVar _rLateSync;
+
         public static void Init()
         {
             Console.AddCommand("r_resolution", CmdResolution, "Display or set resolution, e.g. 1280x720");
@@ -54,6 +59,16 @@ namespace Render
             if (_rResolution.Value == "")
                 _rResolution.Value = Screen.currentResolution.width + "x" + Screen.currentResolution.height + "@" +
                                      Screen.currentResolution.refreshRate;
+        }
+
+        public static void Update()
+        {
+            if (_rLateSync.ChangeCheck())
+            {
+                GraphicsDeviceSettings.waitForPresentSyncPoint = _rLateSync.IntValue == 0
+                    ? WaitForPresentSyncPoint.EndFrame
+                    : WaitForPresentSyncPoint.BeginFrame;
+            }
         }
 
         private static void CmdSrpBatching(string[] args)
@@ -191,6 +206,7 @@ namespace Render
 
                     break;
                 }
+
                 default:
                     GameDebug.LogWarning($"Unknown aa mode: {_rAAMode.Value}");
                     break;

@@ -27,7 +27,7 @@ namespace Game.Core
         private readonly string _name;
         private string _description;
         private readonly Flags _flags;
-        public bool changed;
+        private bool _changed;
 
         private string _stringValue;
         private float _floatValue;
@@ -46,7 +46,7 @@ namespace Game.Core
                     _intValue = 0;
                 if (!float.TryParse(_stringValue, NumberStyles.Float, CultureInfo.InvariantCulture, out _floatValue))
                     _floatValue = 0;
-                changed = true;
+                _changed = true;
             }
         }
 
@@ -149,6 +149,14 @@ namespace Game.Core
             }
 
             GameDebug.Log($"saved: {filename}");
+        }
+
+        public bool ChangeCheck()
+        {
+            if (!_changed)
+                return false;
+            _changed = false;
+            return true;
         }
 
         [Flags]

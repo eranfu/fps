@@ -328,6 +328,14 @@ namespace Game.Main
             gameRoot = null;
         }
 
+        private void Update()
+        {
+            if (!_isHeadless)
+            {
+                RenderSettings.Update();
+            }
+        }
+
         private void PushCamera(Camera cam)
         {
             if (_cameraStack.Count > 0)
