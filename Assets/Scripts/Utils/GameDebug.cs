@@ -102,7 +102,6 @@ namespace Utils
 
         public static void Shutdown()
         {
-            Log("Shutdown GameDebug");
             Application.logMessageReceived -= Write;
             Write(null, null, LogType.Log);
             _writeFileThread.Join();

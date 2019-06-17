@@ -322,9 +322,9 @@ namespace Game.Main
         private void OnDestroy()
         {
             GameDebug.Shutdown();
-            Console.Shutdown();
             if (_debugOverlay != null)
                 _debugOverlay.Shutdown();
+            Console.Shutdown();
             gameRoot = null;
         }
 
